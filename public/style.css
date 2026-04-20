@@ -1,74 +1,101 @@
+/* =========================
+   GLOBAL
+========================= */
 body {
   margin: 0;
-  font-family: Arial;
-  height: 100vh;
-  background: linear-gradient(135deg, #cdb4db, #ffc8dd, #ffd6a5);
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #e0c3fc, #f9d5c0);
 }
 
-/* LOBBY */
-.lobby {
-  text-align: center;
-  padding-top: 80px;
-}
-
+/* =========================
+   TITLE
+========================= */
 .title {
-  font-size: 60px;
-  color: #6b4c4c;
+  text-align: center;
+  margin-top: 40px;
+  font-size: clamp(32px, 6vw, 80px); /* responsive */
+  color: #5b3a3a;
 }
 
 .subtitle {
-  color: #7a5c5c;
+  text-align: center;
+  font-size: 18px;
+  color: #555;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 20px;
 }
 
 .buttons button {
-  padding: 10px 18px;
-  margin: 8px;
+  padding: 12px 20px;
   border-radius: 10px;
   border: none;
-  background: #f3d5b5;
+  background: #e8c9a0;
   cursor: pointer;
+  font-size: 14px;
+}
+
+/* =========================
+   SEARCH
+========================= */
+.search-box {
+  display: flex;
+  justify-content: center;
 }
 
 .search-box input {
   padding: 12px;
-  width: 250px;
-  border-radius: 12px;
+  width: 300px;
+  border-radius: 10px;
   border: none;
+  font-size: 16px;
 }
 
-/* ROOMS */
+/* =========================
+   ROOMS
+========================= */
 .rooms {
   display: flex;
   justify-content: center;
-  gap: 30px;
-  margin-top: 50px;
-}
-
-.card {
-  width: 180px;
+  flex-wrap: wrap;
+  gap: 20px;
   padding: 20px;
-  border-radius: 20px;
-  background: rgba(255,255,255,0.3);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-  cursor: pointer;
 }
 
-.card:hover {
+.room-card {
+  width: 200px;
+  padding: 30px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.5);
+  text-align: center;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.room-card:hover {
   transform: scale(1.05);
 }
 
-/* CHAT */
+/* =========================
+   CHAT
+========================= */
 .chat-app {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
 }
 
 .chat-header {
   background: #333;
   color: white;
-  padding: 10px;
+  padding: 12px;
   display: flex;
   justify-content: space-between;
 }
@@ -77,106 +104,36 @@ body {
   flex: 1;
   overflow-y: auto;
   padding: 10px;
-  background: #111;
 }
 
+/* messages */
 .message {
-  background: #444;
-  color: white;
-  padding: 8px;
-  margin: 5px;
-  border-radius: 8px;
   max-width: 60%;
+  padding: 10px;
+  margin: 6px;
+  border-radius: 12px;
+  background: #ddd;
 }
 
 .message.you {
   background: #6366f1;
+  color: white;
   margin-left: auto;
 }
 
+.message.other {
+  margin-right: auto;
+}
+
+/* input */
 .chat-input {
   display: flex;
   padding: 10px;
-  background: #222;
-}
-
-.chat-input input {
-  flex: 1;
-  padding: 10px;
-}
-
-/* MOBILE FIX */
-html, body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
-
-/* prevent zoom on input */
-input, select, textarea {
-  font-size: 16px;
-}
-
-/* responsive layout */
-@media (max-width: 768px) {
-
-  #roomCards {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  .chat-app {
-    flex-direction: column;
-  }
-
-  #usersList {
-    display: none; /* hide sidebar on mobile */
-  }
-
-  .chat-box {
-    padding: 10px;
-  }
-
-  .message {
-    max-width: 80%;
-    font-size: 14px;
-  }
-
-}
-
-/* =========================
-   MOBILE CHAT FIX (IMPORTANT)
-========================= */
-
-.chat-app {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
-
-/* Fix header */
-.chat-header {
-  flex-shrink: 0;
-}
-
-/* Fix chat box scroll */
-.chat-box {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px;
-}
-
-/* Fix input always visible */
-.chat-input {
-  flex-shrink: 0;
-  display: flex;
-  padding: 10px;
-  background: #1e293b;
+  background: #eee;
   position: sticky;
   bottom: 0;
 }
 
-/* Input styling */
 .chat-input input {
   flex: 1;
   padding: 10px;
@@ -185,25 +142,64 @@ input, select, textarea {
   font-size: 16px; /* prevent zoom */
 }
 
-/* Buttons */
 .chat-input button {
   margin-left: 8px;
   padding: 10px;
 }
 
-/* MOBILE FIX */
+/* =========================
+   MOBILE UI FIX (IMPORTANT)
+========================= */
+
 @media (max-width: 768px) {
 
-  body {
-    overflow: hidden;
+  /* Fix big title */
+  .title {
+    font-size: 32px !important;
+    text-align: center;
   }
 
-  .chat-app {
-    height: 100dvh; /* 👈 THIS FIXES MOBILE HEIGHT */
+  .subtitle {
+    font-size: 16px;
+    text-align: center;
   }
 
-  .chat-box {
-    padding-bottom: 80px; /* space for input */
+  /* Buttons layout */
+  .buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 20px;
+  }
+
+  .buttons button {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  /* Search box */
+  .search-box {
+    padding: 0 20px;
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+  }
+
+  /* Room cards */
+  .rooms {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 20px;
+  }
+
+  .room-card {
+    width: 100%;
+    padding: 20px;
   }
 
 }
