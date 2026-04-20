@@ -2,6 +2,7 @@ const socket = io();
 
 let username = prompt("Enter your name");
 let room = "";
+let currentRooms = {};
 
 const chatBox = document.getElementById("chatBox");
 const input = document.getElementById("messageInput");
@@ -10,6 +11,8 @@ const input = document.getElementById("messageInput");
 socket.emit("getRooms");
 
 socket.on("roomsList", (rooms) => {
+  currentRooms = rooms;
+
   const container = document.getElementById("roomCards");
   container.innerHTML = "";
 
@@ -30,6 +33,19 @@ socket.on("roomsList", (rooms) => {
   }
 });
 
+/* RANDOM ROOM */
+function joinRandom() {
+  const available = Object.keys(currentRooms).filter(
+    (r) => currentRooms[r].users < currentRooms[r].max,
+  );
+
+  if (!available.length) return alert("No rooms available");
+
+  const randomRoom = available[Math.floor(Math.random() * available.length)];
+
+  socket.emit("joinRoom", { username, room: randomRoom });
+}
+
 /* JOIN SUCCESS */
 socket.on("joinedRoom", (r) => {
   room = r;
@@ -41,8 +57,19 @@ socket.on("joinedRoom", (r) => {
 });
 
 /* ROOM FULL */
-socket.on("roomFull", () => {
-  alert("Room is full");
+socket.on("roomFull", () => alert("Room is full"));
+
+/* ONLINE USERS */
+socket.on("roomUsers", (users) => {
+  const box = document.getElementById("usersList");
+  if (!box) return;
+
+  box.innerHTML = "";
+  users.forEach((u) => {
+    const div = document.createElement("div");
+    div.innerText = u;
+    box.appendChild(div);
+  });
 });
 
 /* MESSAGE */
@@ -67,15 +94,44 @@ function sendMessage() {
   input.value = "";
 }
 
-/* UI MESSAGE */
+/* ADD MESSAGE */
 function addMessage(msg, type) {
   const div = document.createElement("div");
   div.className = "message " + type;
-  div.innerText = msg;
+
+  if (msg.match(/\.(jpg|png|gif|jpeg)$/)) {
+    div.innerHTML = `<img src="${msg}" width="150">`;
+  } else {
+    div.innerText = msg;
+  }
 
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
+
+/* FILE UPLOAD */
+function openFile() {
+  document.getElementById("fileInput").click();
+}
+
+document.getElementById("fileInput").onchange = () => {
+  const file = fileInput.files[0];
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  fetch("/upload", {
+    method: "POST",
+    body: formData,
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      socket.emit("chatMessage", {
+        text: data.file,
+        user: username,
+      });
+    });
+};
 
 /* CREATE ROOM */
 function createRoom() {
