@@ -6,7 +6,7 @@ let room = "";
 const chatBox = document.getElementById("chatBox");
 const input = document.getElementById("messageInput");
 
-/* LOAD ROOMS */
+/* ROOMS */
 socket.emit("getRooms");
 
 socket.on("roomsList", (rooms) => {
@@ -28,7 +28,7 @@ socket.on("roomsList", (rooms) => {
   }
 });
 
-/* JOIN ROOM */
+/* JOIN */
 function joinRoom(r) {
   room = r;
 
@@ -75,24 +75,71 @@ function sendMessage() {
   socket.emit("chatMessage", username + ": " + msg);
   addMessage("You: " + msg, "you");
 
+  socket.emit("stopTyping");
   input.value = "";
 }
 
 function addMessage(msg, type) {
   const div = document.createElement("div");
   div.className = "message " + type;
-  div.innerText = msg;
+
+  /* IMAGE / GIF SUPPORT */
+  if (msg.match(/\.(jpg|png|gif|jpeg)$/)) {
+    div.innerHTML = `<img src="${msg}" width="150">`;
+  } else {
+    div.innerText = msg;
+  }
 
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
+
+/* FILE UPLOAD */
+function openFile() {
+  document.getElementById("fileInput").click();
+}
+
+document.getElementById("fileInput").onchange = () => {
+  const file = fileInput.files[0];
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  fetch("/upload", {
+    method: "POST",
+    body: formData,
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      socket.emit("chatMessage", data.file);
+    });
+};
+
+/* TYPING */
+input.addEventListener("input", () => {
+  socket.emit("typing", username);
+
+  setTimeout(() => {
+    socket.emit("stopTyping");
+  }, 1000);
+});
+
+socket.on("typing", (user) => {
+  let el = document.getElementById("typingStatus");
+  if (el) el.innerText = user + " is typing...";
+});
+
+socket.on("stopTyping", () => {
+  let el = document.getElementById("typingStatus");
+  if (el) el.innerText = "";
+});
 
 /* EXIT */
 function leaveRoom() {
   location.reload();
 }
 
-/* ENTER KEY */
+/* ENTER */
 input.addEventListener("keypress", (e) => {
   if (e.key === "Enter") sendMessage();
 });
