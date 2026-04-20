@@ -19,7 +19,7 @@ socket.on("roomsList", (rooms) => {
 
     div.innerHTML = `
       <h3>${r}</h3>
-      <p>${rooms[r]} people inside</p>
+      <p>${rooms[r].users} / ${rooms[r].max} users</p>
     `;
 
     div.onclick = () => joinRoom(r);
@@ -32,13 +32,24 @@ socket.on("roomsList", (rooms) => {
 function joinRoom(r) {
   room = r;
 
-  document.getElementById("lobby").style.display = "none";
-  document.getElementById("chatApp").style.display = "flex";
-
-  document.getElementById("roomName").innerText = r;
-
   socket.emit("joinRoom", { username, room });
 }
+
+/* HANDLE FULL ROOM */
+socket.on("roomFull", () => {
+  alert("❌ Room is full");
+});
+
+/* WHEN JOIN SUCCESS */
+socket.on("message", (data) => {
+  if (data.text.includes("joined the room")) {
+    document.getElementById("lobby").style.display = "none";
+    document.getElementById("chatApp").style.display = "flex";
+    document.getElementById("roomName").innerText = room;
+  }
+
+  addMessage(data.text, "other");
+});
 
 /* RANDOM */
 function joinRandom() {
@@ -46,10 +57,19 @@ function joinRandom() {
   if (cards.length) cards[Math.floor(Math.random() * cards.length)].click();
 }
 
-/* CREATE */
+/* CREATE ROOM WITH LIMIT */
 function createRoom() {
   const name = prompt("Room name?");
-  if (name) joinRoom(name);
+  const max = prompt("Max users? (e.g. 5)");
+
+  if (!name || !max) return;
+
+  socket.emit("createRoom", {
+    room: name,
+    max: parseInt(max),
+  });
+
+  joinRoom(name);
 }
 
 /* SEARCH */
@@ -64,10 +84,6 @@ function filterRooms() {
 }
 
 /* CHAT */
-socket.on("message", (data) => {
-  addMessage(data.text, "other");
-});
-
 function sendMessage() {
   const msg = input.value.trim();
   if (!msg) return;
@@ -83,7 +99,6 @@ function addMessage(msg, type) {
   const div = document.createElement("div");
   div.className = "message " + type;
 
-  /* IMAGE / GIF SUPPORT */
   if (msg.match(/\.(jpg|png|gif|jpeg)$/)) {
     div.innerHTML = `<img src="${msg}" width="150">`;
   } else {
@@ -94,27 +109,6 @@ function addMessage(msg, type) {
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-/* FILE UPLOAD */
-function openFile() {
-  document.getElementById("fileInput").click();
-}
-
-document.getElementById("fileInput").onchange = () => {
-  const file = fileInput.files[0];
-
-  const formData = new FormData();
-  formData.append("file", file);
-
-  fetch("/upload", {
-    method: "POST",
-    body: formData,
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      socket.emit("chatMessage", data.file);
-    });
-};
-
 /* TYPING */
 input.addEventListener("input", () => {
   socket.emit("typing", username);
@@ -122,16 +116,6 @@ input.addEventListener("input", () => {
   setTimeout(() => {
     socket.emit("stopTyping");
   }, 1000);
-});
-
-socket.on("typing", (user) => {
-  let el = document.getElementById("typingStatus");
-  if (el) el.innerText = user + " is typing...";
-});
-
-socket.on("stopTyping", () => {
-  let el = document.getElementById("typingStatus");
-  if (el) el.innerText = "";
 });
 
 /* EXIT */
