@@ -12,13 +12,11 @@
 
 <body>
 
-<!-- 🔐 LOGIN -->
+<!-- LOGIN -->
 <div id="loginScreen" class="login-container">
-
     <div class="login-box">
-
-        <h2>Welcome 👋</h2>
-        <p>Join the conversation</p>
+        <h2>👋 Welcome</h2>
+        <p>Join a live chat room</p>
 
         <input id="usernameInput" placeholder="Your name" />
         <input id="ageInput" type="number" placeholder="Age" />
@@ -30,25 +28,34 @@
             <option value="other">Other</option>
         </select>
 
-        <button onclick="enterApp()">Start Chat</button>
-
+        <button onclick="enterApp()">Enter Chat</button>
     </div>
-
 </div>
 
-<!-- 💬 CHAT -->
+<!-- CHAT -->
 <div id="chatApp" class="chat-app">
 
-    <div class="chat-header">
-        <h3>💬 Chat Room</h3>
-        <button onclick="leaveRoom()">Exit</button>
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h3>🌐 Rooms</h3>
+        <ul id="roomList"></ul>
     </div>
 
-    <div id="chatBox" class="chat-box"></div>
+    <!-- CHAT AREA -->
+    <div class="chat-main">
 
-    <div class="chat-input">
-        <input id="messageInput" placeholder="Type message..." />
-        <button onclick="sendMessage()">➤</button>
+        <div class="chat-header">
+            <span id="roomName">Select Room</span>
+            <button onclick="leaveRoom()">Exit</button>
+        </div>
+
+        <div id="chatBox" class="chat-box"></div>
+
+        <div class="chat-input">
+            <input id="messageInput" placeholder="Type message..." />
+            <button onclick="sendMessage()">➤</button>
+        </div>
+
     </div>
 
 </div>

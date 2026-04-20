@@ -1,24 +1,11 @@
 body {
     margin: 0;
     font-family: 'Poppins', sans-serif;
-    background: #0b1220;
+    background: #0f172a;
     color: white;
-    overflow: hidden;
 }
 
-/* 🌈 Animated Background */
-.bg-animation {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle at top, #1e3a8a, #0b1220, #000);
-    z-index: -1;
-}
-
-/* =========================
-   LOGIN (PREMIUM CARD)
-========================= */
-
+/* LOGIN */
 .login-container {
     height: 100vh;
     display: flex;
@@ -27,76 +14,77 @@ body {
 }
 
 .login-box {
-    width: 92%;
-    max-width: 380px;
-    padding: 25px;
-    border-radius: 20px;
-    background: rgba(255,255,255,0.06);
-    backdrop-filter: blur(20px);
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    background: #1e293b;
+    padding: 30px;
+    border-radius: 15px;
+    width: 300px;
     text-align: center;
-    animation: fadeIn 0.5s ease;
-}
-
-.login-box h2 {
-    margin-bottom: 5px;
-}
-
-.login-box p {
-    opacity: 0.7;
-    font-size: 13px;
-    margin-bottom: 20px;
 }
 
 .login-box input,
 .login-box select {
     width: 100%;
-    padding: 12px;
+    padding: 10px;
     margin-top: 10px;
-    border-radius: 12px;
+    border-radius: 8px;
     border: none;
-    outline: none;
-    font-size: 15px;
-    background: rgba(255,255,255,0.08);
-    color: white;
 }
 
 .login-box button {
-    width: 100%;
     margin-top: 15px;
+    width: 100%;
     padding: 12px;
+    background: #6366f1;
     border: none;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #4f46e5, #2563eb);
+    border-radius: 10px;
     color: white;
-    font-weight: 600;
     cursor: pointer;
-    transition: 0.3s;
 }
 
-.login-box button:hover {
-    transform: scale(1.03);
-}
-
-/* =========================
-   CHAT APP
-========================= */
-
+/* CHAT LAYOUT */
 .chat-app {
     display: none;
     height: 100vh;
+    display: flex;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 250px;
+    background: #1e293b;
+    padding: 20px;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar li {
+    padding: 10px;
+    margin-bottom: 10px;
+    background: #334155;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.sidebar li:hover,
+.sidebar .active {
+    background: #6366f1;
+}
+
+/* CHAT MAIN */
+.chat-main {
+    flex: 1;
+    display: flex;
     flex-direction: column;
 }
 
-/* HEADER */
 .chat-header {
     padding: 15px;
+    background: #1e293b;
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 /* CHAT BOX */
@@ -104,98 +92,46 @@ body {
     flex: 1;
     padding: 15px;
     overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
 }
 
-/* =========================
-   MESSAGES (PREMIUM STYLE)
-========================= */
-
+/* MESSAGES */
 .message {
-    max-width: 75%;
-    padding: 10px 14px;
-    border-radius: 16px;
-    font-size: 14px;
-    line-height: 1.4;
-    animation: pop 0.2s ease;
+    max-width: 60%;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
 }
 
-.you {
-    align-self: flex-end;
-    background: linear-gradient(135deg, #4f46e5, #2563eb);
-    color: white;
-    border-bottom-right-radius: 5px;
+.message.you {
+    background: #6366f1;
+    margin-left: auto;
 }
 
-.other {
-    align-self: flex-start;
-    background: rgba(255,255,255,0.08);
-    border-bottom-left-radius: 5px;
+.message.other {
+    background: #334155;
+    margin-right: auto;
 }
 
-/* =========================
-   INPUT BAR
-========================= */
-
+/* INPUT */
 .chat-input {
     display: flex;
     padding: 10px;
-    gap: 8px;
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(10px);
+    background: #1e293b;
 }
 
 .chat-input input {
     flex: 1;
-    padding: 12px;
-    border-radius: 14px;
+    padding: 10px;
+    border-radius: 10px;
     border: none;
-    outline: none;
-    background: rgba(255,255,255,0.08);
-    color: white;
-    font-size: 15px;
 }
 
 .chat-input button {
-    padding: 12px;
+    margin-left: 10px;
+    padding: 10px 15px;
+    border-radius: 10px;
+    background: #6366f1;
     border: none;
-    border-radius: 12px;
-    background: #4f46e5;
     color: white;
     cursor: pointer;
-}
-
-/* =========================
-   ANIMATIONS
-========================= */
-
-@keyframes fadeIn {
-    from {opacity: 0; transform: translateY(10px);}
-    to {opacity: 1; transform: translateY(0);}
-}
-
-@keyframes pop {
-    from {transform: scale(0.95); opacity: 0;}
-    to {transform: scale(1); opacity: 1;}
-}
-
-/* =========================
-   MOBILE FIX
-========================= */
-
-@media (max-width: 600px) {
-    .login-box {
-        width: 90%;
-    }
-
-    .message {
-        max-width: 85%;
-        font-size: 13px;
-    }
-
-    .chat-input input {
-        font-size: 16px; /* prevents zoom bug */
-    }
 }
