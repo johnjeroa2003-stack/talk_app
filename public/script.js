@@ -179,7 +179,7 @@ input.addEventListener("input", () => {
   }, 1000);
 });
 
-/* FILE SHORTCUT */
+/* FILE PICKER */
 const fileInput = document.createElement("input");
 fileInput.type = "file";
 fileInput.style.display = "none";

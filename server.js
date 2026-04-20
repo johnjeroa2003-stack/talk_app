@@ -9,7 +9,7 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-/* 📁 FILE STORAGE */
+/* FILE STORAGE */
 const storage = multer.diskStorage({
   destination: "./public/uploads/",
   filename: (req, file, cb) => {
@@ -56,7 +56,7 @@ io.on("connection", (socket) => {
     });
   });
 
-  /* 🔒 DM */
+  /* PRIVATE MESSAGE */
   socket.on("privateMessage", ({ to, message }) => {
     io.to(to).emit("privateMessage", {
       username: socket.username,
@@ -65,7 +65,7 @@ io.on("connection", (socket) => {
     });
   });
 
-  /* 📷 FILE */
+  /* FILE SHARE */
   socket.on("fileMessage", ({ file, name }) => {
     io.to(socket.room).emit("fileMessage", {
       username: socket.username,
@@ -82,7 +82,7 @@ io.on("connection", (socket) => {
     });
   });
 
-  /* ✍️ TYPING */
+  /* TYPING */
   socket.on("typing", (user) => {
     socket.to(socket.room).emit("typing", user);
   });
@@ -118,4 +118,4 @@ function getUsers(room) {
   });
 }
 
-server.listen(3000, () => console.log("🚀 FINAL server running"));
+server.listen(3000, () => console.log("🚀 Server running on 3000"));
