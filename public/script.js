@@ -1,76 +1,82 @@
 const socket = io();
 
+const roomCards = document.getElementById("roomCards");
+const chatApp = document.getElementById("chatApp");
+const lobby = document.getElementById("lobby");
+
 const chatBox = document.getElementById("chatBox");
 const input = document.getElementById("messageInput");
-const roomListDiv = document.getElementById("roomList");
-const usernameInput = document.getElementById("usernameInput");
-const usersList = document.getElementById("usersList");
 
-let username = "";
+let username = prompt("Enter your name");
 let room = "";
-let currentDM = null;
 
-/* LOGIN */
-function enterApp() {
-  username = usernameInput.value.trim();
-  if (!username) return;
+/* GET ROOMS */
+socket.emit("getRooms");
 
-  document.getElementById("loginScreen").style.display = "none";
-  document.getElementById("chatApp").style.display = "flex";
-
-  socket.emit("getRooms");
-}
-
-/* ROOMS */
 socket.on("roomsList", (rooms) => {
-  roomListDiv.innerHTML = "";
+  roomCards.innerHTML = "";
+
   for (let r in rooms) {
     const div = document.createElement("div");
-    div.className = "room";
-    div.innerText = `${r} (${rooms[r]})`;
+    div.className = "card";
+
+    div.innerHTML = `
+      <h3>${r}</h3>
+      <p>Public chat room</p>
+      <p class="people">${rooms[r]} people inside</p>
+    `;
+
     div.onclick = () => joinRoom(r);
-    roomListDiv.appendChild(div);
+
+    roomCards.appendChild(div);
   }
 });
 
+/* JOIN */
 function joinRoom(r) {
   room = r;
-  currentDM = null;
-  socket.emit("joinRoom", { username, room });
+
+  lobby.style.display = "none";
+  chatApp.style.display = "block";
+
   document.getElementById("roomName").innerText = r;
+
+  socket.emit("joinRoom", { username, room });
 }
 
-/* USERS */
-socket.on("roomUsers", (users) => {
-  usersList.innerHTML = "";
-  users.forEach((u) => {
-    const div = document.createElement("div");
-    div.innerText = "🟢 " + u.name;
-    div.onclick = () => (currentDM = u.id);
-    usersList.appendChild(div);
+/* RANDOM */
+function joinRandom() {
+  const cards = document.querySelectorAll(".card");
+  if (cards.length > 0) cards[0].click();
+}
+
+/* CREATE */
+function createRoom() {
+  const name = prompt("Room name?");
+  if (name) joinRoom(name);
+}
+
+/* SEARCH */
+function filterRooms() {
+  const val = document.getElementById("searchRoom").value.toLowerCase();
+  document.querySelectorAll(".card").forEach((c) => {
+    c.style.display = c.innerText.toLowerCase().includes(val)
+      ? "block"
+      : "none";
   });
-});
+}
 
 /* CHAT */
 socket.on("message", (data) => {
-  if (!currentDM) addMessage(data.text, "other");
-});
-
-socket.on("privateMessage", ({ username, message }) => {
-  addMessage("🔒 " + username + ": " + message, "other");
+  addMessage(data.text, "other");
 });
 
 function sendMessage() {
-  const msg = input.value.trim();
+  const msg = input.value;
   if (!msg) return;
 
-  if (currentDM) {
-    socket.emit("privateMessage", { to: currentDM, message: msg });
-    addMessage("🔒 You: " + msg, "you");
-  } else {
-    socket.emit("chatMessage", username + ": " + msg);
-    addMessage("You: " + msg, "you");
-  }
+  socket.emit("chatMessage", username + ": " + msg);
+  addMessage("You: " + msg, "you");
 
   input.value = "";
 }
@@ -83,73 +89,12 @@ function addMessage(msg, type) {
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-/* VOICE */
-let localStream;
-let peers = {};
-
-async function startVoice() {
-  localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  socket.emit("joinVoice", room);
-}
-
-socket.on("voiceUsers", (users) => {
-  users.forEach((id) => {
-    if (id !== socket.id) createPeer(id);
-  });
-});
-
-function createPeer(id) {
-  const peer = new RTCPeerConnection();
-
-  localStream.getTracks().forEach((t) => peer.addTrack(t, localStream));
-
-  peer.ontrack = (e) => {
-    const audio = document.createElement("audio");
-    audio.srcObject = e.streams[0];
-    audio.autoplay = true;
-    document.body.appendChild(audio);
-  };
-
-  peer.onicecandidate = (e) => {
-    if (e.candidate) socket.emit("ice", { to: id, candidate: e.candidate });
-  };
-
-  peer.createOffer().then((o) => {
-    peer.setLocalDescription(o);
-    socket.emit("offer", { to: id, offer: o });
-  });
-
-  peers[id] = peer;
-}
-
-socket.on("offer", async ({ from, offer }) => {
-  const peer = new RTCPeerConnection();
-
-  localStream.getTracks().forEach((t) => peer.addTrack(t, localStream));
-
-  await peer.setRemoteDescription(offer);
-  const answer = await peer.createAnswer();
-  await peer.setLocalDescription(answer);
-
-  socket.emit("answer", { to: from, answer });
-
-  peers[from] = peer;
-});
-
-socket.on("answer", ({ from, answer }) => {
-  peers[from].setRemoteDescription(answer);
-});
-
-socket.on("ice", ({ from, candidate }) => {
-  peers[from].addIceCandidate(candidate);
-});
-
 /* EXIT */
 function leaveRoom() {
   location.reload();
 }
 
-/* ENTER */
+/* ENTER KEY */
 input.addEventListener("keypress", (e) => {
   if (e.key === "Enter") sendMessage();
 });

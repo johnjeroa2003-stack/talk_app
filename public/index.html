@@ -1,34 +1,63 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Chat App</title>
+  <title>frenzio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<div id="loginScreen">
-  <input id="usernameInput" placeholder="Name">
-  <button onclick="enterApp()">Enter</button>
-</div>
+<!-- ================= LOBBY ================= -->
+<div id="lobby">
 
-<div id="chatApp" style="display:none;">
+  <h1 class="logo">frenzio</h1>
+  <p class="subtitle">Practice English by joining free public rooms</p>
 
-  <div id="roomList"></div>
-
-  <div>
-    <div>
-      <span id="roomName"></span>
-      <button onclick="startVoice()">🎤</button>
-      <button onclick="leaveRoom()">Exit</button>
-    </div>
-
-    <div id="chatBox"></div>
-
-    <input id="messageInput">
-    <button onclick="sendMessage()">Send</button>
+  <div class="top-buttons">
+    <button class="join-btn" onclick="joinRandom()">Join Random Room</button>
+    <button class="create-btn" onclick="createRoom()">Create Room</button>
   </div>
 
-  <div id="usersList"></div>
+  <input id="searchRoom" placeholder="Search rooms..." oninput="filterRooms()" />
+
+  <div id="roomCards" class="room-cards"></div>
+
+</div>
+
+<!-- ================= CHAT ================= -->
+<div id="chatApp" style="display:none;">
+
+  <div class="chat-app">
+
+    <!-- LEFT ROOMS -->
+    <div id="roomList"></div>
+
+    <!-- CENTER -->
+    <div class="chat-container">
+
+      <div class="chat-header">
+        <span id="roomName">Room</span>
+
+        <div>
+          <button onclick="startVoice()">🎤</button>
+          <button onclick="leaveRoom()">Exit</button>
+        </div>
+      </div>
+
+      <div id="chatBox" class="chat-box"></div>
+
+      <div class="chat-input">
+        <input id="messageInput" placeholder="Type message..." />
+        <button onclick="sendMessage()">➤</button>
+      </div>
+
+    </div>
+
+    <!-- USERS -->
+    <div id="usersList"></div>
+
+  </div>
 
 </div>
 
