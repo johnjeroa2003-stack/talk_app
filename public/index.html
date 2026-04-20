@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat As You Like</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- 🔐 LOGIN -->
+<div id="loginScreen" class="login-container">
+
+    <div class="login-box">
+
+        <h2>Welcome 👋</h2>
+        <p>Join the conversation</p>
+
+        <input id="usernameInput" placeholder="Your name" />
+        <input id="ageInput" type="number" placeholder="Age" />
+
+        <select id="genderInput">
+            <option value="">Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+        </select>
+
+        <button onclick="enterApp()">Start Chat</button>
+
+    </div>
+
+</div>
+
+<!-- 💬 CHAT -->
+<div id="chatApp" class="chat-app">
+
+    <div class="chat-header">
+        <h3>💬 Chat Room</h3>
+        <button onclick="leaveRoom()">Exit</button>
+    </div>
+
+    <div id="chatBox" class="chat-box"></div>
+
+    <div class="chat-input">
+        <input id="messageInput" placeholder="Type message..." />
+        <button onclick="sendMessage()">➤</button>
+    </div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
