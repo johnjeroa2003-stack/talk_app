@@ -1,63 +1,47 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chat_As_You_Like</title>
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="style.css">
+  <title>Chat_As_You_Like</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<!-- 🔥 LOBBY (UNCHANGED UI) -->
-<div id="lobby" style="text-align:center; padding-top:50px;">
+<div class="lobby">
 
-    <h1 style="font-size:60px;">Chat_As_You_Like</h1>
-    <p style="color:gray;">Talk with Buddies</p>
+  <h1 class="title">Chat_As_You_Like</h1>
+  <p class="subtitle">Talk with Buddies</p>
 
+  <div class="buttons">
     <button onclick="joinRandom()">Join Random Room</button>
     <button onclick="createRoom()">Create Room</button>
+  </div>
 
-    <br><br>
+  <div class="search-box">
+    <input id="searchRoom" placeholder="Search rooms...">
+  </div>
 
-    <input id="searchRoom" placeholder="Search rooms..." oninput="filterRooms()" />
+  <div class="rooms">
 
-    <div id="roomCards" style="margin-top:40px;"></div>
-
-</div>
-
-<!-- 💬 CHAT (YOUR ORIGINAL UI) -->
-<div id="chatApp" class="chat-app" style="display:none;">
-
-    <div id="roomList"></div>
-
-    <div class="chat-container">
-
-        <div class="chat-header">
-            <span id="roomName">Select Room</span>
-            <button onclick="leaveRoom()">Exit</button>
-        </div>
-
-        <div id="chatBox" class="chat-box"></div>
-
-        <div id="typingStatus" style="color:gray; font-size:12px;"></div>
-
-        <div class="chat-input">
-            <input id="messageInput" placeholder="Type message..." />
-            <button onclick="sendMessage()">➤</button>
-        </div>
-
+    <div class="card">
+      <h3>General</h3>
+      <p>0 people inside</p>
     </div>
 
-    <div id="usersList"></div>
+    <div class="card">
+      <h3>Fun</h3>
+      <p>0 people inside</p>
+    </div>
+
+    <div class="card">
+      <h3>Study</h3>
+      <p>0 people inside</p>
+    </div>
+
+  </div>
 
 </div>
-
-<script src="/socket.io/socket.io.js"></script>
-<script src="script.js"></script>
 
 </body>
 </html>
