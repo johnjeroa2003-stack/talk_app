@@ -2,7 +2,9 @@
 <html>
 <head>
   <title>Chat_As_You_Like</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ✅ MOBILE FIX (UPDATED) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
   <link rel="stylesheet" href="style.css">
 </head>
@@ -42,9 +44,10 @@
     <input id="messageInput" placeholder="Type message...">
     <button onclick="sendMessage()">➤</button>
     <button onclick="openFile()">📎</button>
-</div>
+  </div>
 
-<input type="file" id="fileInput" style="display:none">
+  <!-- FILE INPUT -->
+  <input type="file" id="fileInput" style="display:none">
 
 </div>
 
