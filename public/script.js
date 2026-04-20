@@ -12,7 +12,9 @@ let currentDM = null;
 
 const notify = new Audio("/sounds/receive.mp3");
 
-/* LOGIN */
+/* =========================
+   LOGIN
+========================= */
 function enterApp() {
   username = usernameInput.value.trim();
   if (!username) return;
@@ -23,7 +25,9 @@ function enterApp() {
   socket.emit("getRooms");
 }
 
-/* ROOMS */
+/* =========================
+   ROOMS
+========================= */
 socket.on("roomsList", (rooms) => {
   roomListDiv.innerHTML = "";
 
@@ -45,7 +49,9 @@ function joinRoom(r) {
   loadChat("room_" + room);
 }
 
-/* USERS */
+/* =========================
+   USERS (DM)
+========================= */
 socket.on("roomUsers", (users) => {
   usersList.innerHTML = "";
 
@@ -63,7 +69,9 @@ socket.on("roomUsers", (users) => {
   });
 });
 
-/* RECEIVE */
+/* =========================
+   RECEIVE
+========================= */
 socket.on("message", (data) => {
   if (!currentDM) addMessage(data.text, data.status);
 });
@@ -73,7 +81,9 @@ socket.on("privateMessage", ({ username, message, status }) => {
   addMessage("🔒 " + username + ": " + message, status);
 });
 
-/* FILE RECEIVE */
+/* =========================
+   FILE RECEIVE
+========================= */
 socket.on("fileMessage", ({ username, file, name }) => {
   addFile(username, file, name);
 });
@@ -82,7 +92,9 @@ socket.on("privateFile", ({ username, file, name }) => {
   addFile("🔒 " + username, file, name);
 });
 
-/* SEND */
+/* =========================
+   SEND MESSAGE
+========================= */
 function sendMessage() {
   const msg = input.value.trim();
   if (!msg) return;
@@ -100,12 +112,17 @@ function sendMessage() {
   input.value = "";
 }
 
-/* FILE SEND */
+/* =========================
+   FILE SEND
+========================= */
 function sendFile(file) {
   const formData = new FormData();
   formData.append("file", file);
 
-  fetch("/upload", { method: "POST", body: formData })
+  fetch("/upload", {
+    method: "POST",
+    body: formData,
+  })
     .then((res) => res.json())
     .then((data) => {
       if (currentDM) {
@@ -115,12 +132,17 @@ function sendFile(file) {
           name: file.name,
         });
       } else {
-        socket.emit("fileMessage", { file: data.file, name: file.name });
+        socket.emit("fileMessage", {
+          file: data.file,
+          name: file.name,
+        });
       }
     });
 }
 
-/* UI */
+/* =========================
+   UI
+========================= */
 function addMessage(msg, status = "") {
   const div = document.createElement("div");
   div.className = "message";
@@ -149,10 +171,13 @@ function addSystem(msg) {
   div.className = "message";
   div.style.opacity = "0.6";
   div.innerText = msg;
+
   chatBox.appendChild(div);
 }
 
-/* MEMORY */
+/* =========================
+   MEMORY
+========================= */
 function saveChat(key) {
   localStorage.setItem(key, chatBox.innerHTML);
 }
@@ -161,7 +186,9 @@ function loadChat(key) {
   chatBox.innerHTML = localStorage.getItem(key) || "";
 }
 
-/* TYPING */
+/* =========================
+   TYPING
+========================= */
 let typingTimeout;
 
 input.addEventListener("input", () => {
@@ -174,12 +201,17 @@ input.addEventListener("input", () => {
   clearTimeout(typingTimeout);
 
   typingTimeout = setTimeout(() => {
-    if (currentDM) socket.emit("stopTypingDM", { to: currentDM });
-    else socket.emit("stopTyping");
+    if (currentDM) {
+      socket.emit("stopTypingDM", { to: currentDM });
+    } else {
+      socket.emit("stopTyping");
+    }
   }, 1000);
 });
 
-/* FILE PICKER */
+/* =========================
+   FILE PICKER
+========================= */
 const fileInput = document.createElement("input");
 fileInput.type = "file";
 fileInput.style.display = "none";
@@ -193,7 +225,32 @@ document.addEventListener("keydown", (e) => {
   if (e.ctrlKey && e.key === "u") fileInput.click();
 });
 
-/* ENTER */
+/* =========================
+   EXIT BUTTON FIX
+========================= */
+function leaveRoom() {
+  room = "";
+  currentDM = null;
+
+  socket.disconnect();
+
+  setTimeout(() => {
+    socket.connect();
+  }, 300);
+
+  chatBox.innerHTML = "";
+
+  document.getElementById("chatApp").style.display = "none";
+  document.getElementById("loginScreen").style.display = "flex";
+
+  input.value = "";
+
+  console.log("🚪 Exited room");
+}
+
+/* =========================
+   ENTER KEY
+========================= */
 input.addEventListener("keypress", (e) => {
   if (e.key === "Enter") sendMessage();
 });
