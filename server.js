@@ -1,127 +1,121 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const multer = require("multer");
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-/* =========================
-   FIX: Serve frontend properly
-========================= */
-
 app.use(express.static("public"));
 
-app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/public/index.html");
+/* 📁 FILE STORAGE */
+const storage = multer.diskStorage({
+  destination: "./public/uploads/",
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
 });
 
-/* =========================
-   ROOMS DATA
-========================= */
+const upload = multer({ storage });
+
+app.post("/upload", upload.single("file"), (req, res) => {
+  res.json({ file: "/uploads/" + req.file.filename });
+});
 
 let rooms = {};
 
-/* =========================
-   SOCKET CONNECTION
-========================= */
-
 io.on("connection", (socket) => {
-  /* Get rooms */
   socket.on("getRooms", () => {
-    let summary = {};
-    for (let r in rooms) summary[r] = rooms[r].length;
-    socket.emit("roomsList", summary);
+    io.emit("roomsList", rooms);
   });
 
-  /* Join room */
   socket.on("joinRoom", ({ username, room }) => {
     socket.join(room);
+
     socket.username = username;
     socket.room = room;
 
-    if (!rooms[room]) rooms[room] = [];
-    rooms[room].push(socket);
+    if (!rooms[room]) rooms[room] = 0;
+    rooms[room]++;
 
-    updateUsers(room);
-    updateRooms();
+    io.to(room).emit("message", {
+      text: username + " joined",
+      status: "✔✔",
+    });
 
-    socket.to(room).emit("message", username + " joined");
+    io.emit("roomsList", rooms);
+
+    io.to(room).emit("roomUsers", getUsers(room));
   });
 
-  /* Chat messages */
   socket.on("chatMessage", (msg) => {
-    io.to(socket.room).emit("message", msg);
-  });
-
-  /* =========================
-     🎙 VOICE SIGNALING
-  ========================= */
-
-  socket.on("voice-ready", () => {
-    socket.to(socket.room).emit("voice-user-joined", socket.id);
-  });
-
-  socket.on("voice-offer", ({ to, offer }) => {
-    io.to(to).emit("voice-offer", { from: socket.id, offer });
-  });
-
-  socket.on("voice-answer", ({ to, answer }) => {
-    io.to(to).emit("voice-answer", { from: socket.id, answer });
-  });
-
-  socket.on("voice-ice", ({ to, candidate }) => {
-    io.to(to).emit("voice-ice", { from: socket.id, candidate });
-  });
-
-  /* 🟢 Speaking indicator */
-  socket.on("speaking", (status) => {
-    socket.to(socket.room).emit("user-speaking", {
-      user: socket.username,
-      speaking: status,
+    io.to(socket.room).emit("message", {
+      text: msg,
+      status: "✔✔",
     });
   });
 
-  /* =========================
-     DISCONNECT
-  ========================= */
-
-  socket.on("disconnect", () => {
-    const room = socket.room;
-    if (!room || !rooms[room]) return;
-
-    rooms[room] = rooms[room].filter((s) => s.id !== socket.id);
-
-    if (rooms[room].length === 0) delete rooms[room];
-
-    updateUsers(room);
-    updateRooms();
-
-    socket.to(room).emit("message", socket.username + " left");
+  /* 🔒 DM */
+  socket.on("privateMessage", ({ to, message }) => {
+    io.to(to).emit("privateMessage", {
+      username: socket.username,
+      message,
+      status: "✔✔",
+    });
   });
 
-  /* =========================
-     HELPERS
-  ========================= */
+  /* 📷 FILE */
+  socket.on("fileMessage", ({ file, name }) => {
+    io.to(socket.room).emit("fileMessage", {
+      username: socket.username,
+      file,
+      name,
+    });
+  });
 
-  function updateUsers(room) {
-    const users = rooms[room]?.map((s) => s.username) || [];
-    io.to(room).emit("roomUsers", users);
-  }
+  socket.on("privateFile", ({ to, file, name }) => {
+    io.to(to).emit("privateFile", {
+      username: socket.username,
+      file,
+      name,
+    });
+  });
 
-  function updateRooms() {
-    let summary = {};
-    for (let r in rooms) summary[r] = rooms[r].length;
-    io.emit("roomsList", summary);
-  }
+  /* ✍️ TYPING */
+  socket.on("typing", (user) => {
+    socket.to(socket.room).emit("typing", user);
+  });
+
+  socket.on("stopTyping", () => {
+    socket.to(socket.room).emit("stopTyping");
+  });
+
+  socket.on("typingDM", ({ to, user }) => {
+    io.to(to).emit("typingDM", user);
+  });
+
+  socket.on("stopTypingDM", ({ to }) => {
+    io.to(to).emit("stopTypingDM");
+  });
+
+  socket.on("disconnect", () => {
+    if (socket.room && rooms[socket.room]) {
+      rooms[socket.room]--;
+      if (rooms[socket.room] <= 0) delete rooms[socket.room];
+      io.emit("roomsList", rooms);
+    }
+  });
 });
 
-/* =========================
-   START SERVER (DEPLOY SAFE)
-========================= */
+function getUsers(room) {
+  const clients = io.sockets.adapter.rooms.get(room);
+  if (!clients) return [];
 
-const PORT = process.env.PORT || 3000;
+  return [...clients].map((id) => {
+    const s = io.sockets.sockets.get(id);
+    return { id, name: s?.username || "User" };
+  });
+}
 
-server.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
-});
+server.listen(3000, () => console.log("🚀 FINAL server running"));
