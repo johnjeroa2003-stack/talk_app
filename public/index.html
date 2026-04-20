@@ -3,12 +3,13 @@
 <head>
   <title>Chat_As_You_Like</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div class="lobby">
+<div class="lobby" id="lobby">
 
   <h1 class="title">Chat_As_You_Like</h1>
   <p class="subtitle">Talk with Buddies</p>
@@ -19,29 +20,33 @@
   </div>
 
   <div class="search-box">
-    <input id="searchRoom" placeholder="Search rooms...">
+    <input id="searchRoom" placeholder="Search rooms..." oninput="filterRooms()">
   </div>
 
-  <div class="rooms">
+  <div id="roomCards" class="rooms"></div>
 
-    <div class="card">
-      <h3>General</h3>
-      <p>0 people inside</p>
-    </div>
+</div>
 
-    <div class="card">
-      <h3>Fun</h3>
-      <p>0 people inside</p>
-    </div>
 
-    <div class="card">
-      <h3>Study</h3>
-      <p>0 people inside</p>
-    </div>
+<!-- CHAT SCREEN -->
+<div id="chatApp" class="chat-app" style="display:none;">
 
+  <div class="chat-header">
+    <span id="roomName"></span>
+    <button onclick="leaveRoom()">Exit</button>
+  </div>
+
+  <div id="chatBox" class="chat-box"></div>
+
+  <div class="chat-input">
+    <input id="messageInput" placeholder="Type message...">
+    <button onclick="sendMessage()">➤</button>
   </div>
 
 </div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>

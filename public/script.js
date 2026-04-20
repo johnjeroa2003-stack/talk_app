@@ -6,9 +6,7 @@ let room = "";
 const chatBox = document.getElementById("chatBox");
 const input = document.getElementById("messageInput");
 
-/* =========================
-   ROOMS
-========================= */
+/* LOAD ROOMS */
 socket.emit("getRooms");
 
 socket.on("roomsList", (rooms) => {
@@ -17,18 +15,12 @@ socket.on("roomsList", (rooms) => {
 
   for (let r in rooms) {
     const div = document.createElement("div");
+    div.className = "card";
 
     div.innerHTML = `
-            <h3>${r}</h3>
-            <p>${rooms[r]} people inside</p>
-        `;
-
-    div.style.margin = "20px";
-    div.style.padding = "20px";
-    div.style.background = "#111";
-    div.style.borderRadius = "10px";
-    div.style.display = "inline-block";
-    div.style.cursor = "pointer";
+      <h3>${r}</h3>
+      <p>${rooms[r]} people inside</p>
+    `;
 
     div.onclick = () => joinRoom(r);
 
@@ -36,9 +28,7 @@ socket.on("roomsList", (rooms) => {
   }
 });
 
-/* =========================
-   JOIN
-========================= */
+/* JOIN ROOM */
 function joinRoom(r) {
   room = r;
 
@@ -52,8 +42,8 @@ function joinRoom(r) {
 
 /* RANDOM */
 function joinRandom() {
-  const rooms = document.querySelectorAll("#roomCards div");
-  if (rooms.length) rooms[Math.floor(Math.random() * rooms.length)].click();
+  const cards = document.querySelectorAll(".card");
+  if (cards.length) cards[Math.floor(Math.random() * cards.length)].click();
 }
 
 /* CREATE */
@@ -65,16 +55,15 @@ function createRoom() {
 /* SEARCH */
 function filterRooms() {
   const val = document.getElementById("searchRoom").value.toLowerCase();
-  document.querySelectorAll("#roomCards div").forEach((c) => {
+
+  document.querySelectorAll(".card").forEach((c) => {
     c.style.display = c.innerText.toLowerCase().includes(val)
-      ? "inline-block"
+      ? "block"
       : "none";
   });
 }
 
-/* =========================
-   CHAT
-========================= */
+/* CHAT */
 socket.on("message", (data) => {
   addMessage(data.text, "other");
 });
@@ -85,8 +74,6 @@ function sendMessage() {
 
   socket.emit("chatMessage", username + ": " + msg);
   addMessage("You: " + msg, "you");
-
-  socket.emit("stopTyping");
 
   input.value = "";
 }
@@ -100,28 +87,7 @@ function addMessage(msg, type) {
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-/* =========================
-   TYPING
-========================= */
-input.addEventListener("input", () => {
-  socket.emit("typing", username);
-
-  setTimeout(() => {
-    socket.emit("stopTyping");
-  }, 1000);
-});
-
-socket.on("typing", (user) => {
-  document.getElementById("typingStatus").innerText = user + " is typing...";
-});
-
-socket.on("stopTyping", () => {
-  document.getElementById("typingStatus").innerText = "";
-});
-
-/* =========================
-   EXIT
-========================= */
+/* EXIT */
 function leaveRoom() {
   location.reload();
 }

@@ -1,52 +1,42 @@
 body {
   margin: 0;
-  font-family: 'Poppins', sans-serif;
+  font-family: Arial;
   height: 100vh;
-
   background: linear-gradient(135deg, #cdb4db, #ffc8dd, #ffd6a5);
-  overflow: hidden;
 }
 
-/* center layout */
+/* LOBBY */
 .lobby {
   text-align: center;
   padding-top: 80px;
 }
 
-/* title */
 .title {
   font-size: 60px;
   color: #6b4c4c;
-  text-shadow: 2px 2px 5px rgba(0,0,0,0.2);
 }
 
-/* subtitle */
 .subtitle {
   color: #7a5c5c;
-  margin-bottom: 20px;
 }
 
-/* buttons */
 .buttons button {
   padding: 10px 18px;
   margin: 8px;
-  border: none;
   border-radius: 10px;
+  border: none;
   background: #f3d5b5;
-  box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
   cursor: pointer;
 }
 
-/* search */
 .search-box input {
   padding: 12px;
   width: 250px;
   border-radius: 12px;
   border: none;
-  margin-top: 10px;
 }
 
-/* cards layout */
+/* ROOMS */
 .rooms {
   display: flex;
   justify-content: center;
@@ -54,17 +44,13 @@ body {
   margin-top: 50px;
 }
 
-/* glass card */
 .card {
   width: 180px;
   padding: 20px;
   border-radius: 20px;
-
   background: rgba(255,255,255,0.3);
   backdrop-filter: blur(10px);
-
   box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-  transition: 0.3s;
   cursor: pointer;
 }
 
@@ -72,27 +58,49 @@ body {
   transform: scale(1.05);
 }
 
-/* bubbles */
-body::before {
-  content: "";
-  position: absolute;
-  width: 300px;
-  height: 300px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 50%;
-  top: 10%;
-  left: 10%;
-  filter: blur(40px);
+/* CHAT */
+.chat-app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
 }
 
-body::after {
-  content: "";
-  position: absolute;
-  width: 200px;
-  height: 200px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 50%;
-  bottom: 10%;
-  right: 10%;
-  filter: blur(40px);
+.chat-header {
+  background: #333;
+  color: white;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.chat-box {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  background: #111;
+}
+
+.message {
+  background: #444;
+  color: white;
+  padding: 8px;
+  margin: 5px;
+  border-radius: 8px;
+  max-width: 60%;
+}
+
+.message.you {
+  background: #6366f1;
+  margin-left: auto;
+}
+
+.chat-input {
+  display: flex;
+  padding: 10px;
+  background: #222;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 10px;
 }
