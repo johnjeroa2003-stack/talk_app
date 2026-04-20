@@ -23,7 +23,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
   res.json({ file: "/uploads/" + req.file.filename });
 });
 
-/* ROOMS */
+/* DATA */
 let rooms = {
   General: { users: 0, max: 10 },
   Fun: { users: 0, max: 10 },
@@ -31,8 +31,8 @@ let rooms = {
 };
 
 let usersInRoom = {};
+let userSockets = {}; // for DM
 
-/* SOCKET */
 io.on("connection", (socket) => {
   socket.on("getRooms", () => {
     socket.emit("roomsList", rooms);
@@ -46,9 +46,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("joinRoom", ({ username, room }) => {
-    if (!rooms[room]) {
-      rooms[room] = { users: 0, max: 10 };
-    }
+    if (!rooms[room]) rooms[room] = { users: 0, max: 10 };
 
     if (rooms[room].users >= rooms[room].max) {
       socket.emit("roomFull");
@@ -59,6 +57,8 @@ io.on("connection", (socket) => {
     socket.username = username;
     socket.room = room;
 
+    userSockets[username] = socket.id;
+
     rooms[room].users++;
 
     if (!usersInRoom[room]) usersInRoom[room] = [];
@@ -67,7 +67,6 @@ io.on("connection", (socket) => {
     io.emit("roomsList", rooms);
 
     socket.emit("joinedRoom", room);
-
     io.to(room).emit("roomUsers", usersInRoom[room]);
 
     io.to(room).emit("message", {
@@ -76,14 +75,22 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("chatMessage", ({ text, user }) => {
-    io.to(socket.room).emit("message", { text, user });
+  /* GROUP CHAT */
+  socket.on("chatMessage", ({ text, user, reply }) => {
+    io.to(socket.room).emit("message", { text, user, reply });
+  });
+
+  /* PRIVATE CHAT */
+  socket.on("privateMessage", ({ to, text, from }) => {
+    const target = userSockets[to];
+    if (target) {
+      io.to(target).emit("privateMessage", { text, from });
+    }
   });
 
   socket.on("disconnect", () => {
     if (socket.room && rooms[socket.room]) {
       rooms[socket.room].users--;
-      if (rooms[socket.room].users < 0) rooms[socket.room].users = 0;
 
       usersInRoom[socket.room] = (usersInRoom[socket.room] || []).filter(
         (u) => u !== socket.username,
@@ -91,11 +98,6 @@ io.on("connection", (socket) => {
 
       io.emit("roomsList", rooms);
       io.to(socket.room).emit("roomUsers", usersInRoom[socket.room]);
-
-      io.to(socket.room).emit("message", {
-        text: socket.username + " left",
-        user: "system",
-      });
     }
   });
 });

@@ -3,11 +3,12 @@ const socket = io();
 let username = prompt("Enter your name");
 let room = "";
 let currentRooms = {};
+let replyTo = null;
 
 const chatBox = document.getElementById("chatBox");
 const input = document.getElementById("messageInput");
 
-/* LOAD ROOMS */
+/* ROOMS */
 socket.emit("getRooms");
 
 socket.on("roomsList", (rooms) => {
@@ -20,64 +21,81 @@ socket.on("roomsList", (rooms) => {
     const div = document.createElement("div");
     div.className = "card";
 
-    div.innerHTML = `
-      <h3>${r}</h3>
-      <p>${rooms[r].users} / ${rooms[r].max}</p>
-    `;
+    div.innerHTML = `<h3>${r}</h3><p>${rooms[r].users}/${rooms[r].max}</p>`;
 
-    div.onclick = () => {
-      socket.emit("joinRoom", { username, room: r });
-    };
+    div.onclick = () => socket.emit("joinRoom", { username, room: r });
 
     container.appendChild(div);
   }
 });
 
-/* RANDOM ROOM */
+/* RANDOM */
 function joinRandom() {
   const available = Object.keys(currentRooms).filter(
     (r) => currentRooms[r].users < currentRooms[r].max,
   );
 
-  if (!available.length) return alert("No rooms available");
+  if (!available.length) return alert("No rooms");
 
-  const randomRoom = available[Math.floor(Math.random() * available.length)];
-
-  socket.emit("joinRoom", { username, room: randomRoom });
+  const r = available[Math.floor(Math.random() * available.length)];
+  socket.emit("joinRoom", { username, room: r });
 }
 
-/* JOIN SUCCESS */
+/* JOIN */
 socket.on("joinedRoom", (r) => {
   room = r;
-
   document.getElementById("lobby").style.display = "none";
   document.getElementById("chatApp").style.display = "flex";
-
   document.getElementById("roomName").innerText = r;
 });
 
-/* ROOM FULL */
-socket.on("roomFull", () => alert("Room is full"));
-
-/* ONLINE USERS */
+/* USERS + ONLINE */
 socket.on("roomUsers", (users) => {
   const box = document.getElementById("usersList");
   if (!box) return;
 
   box.innerHTML = "";
+
   users.forEach((u) => {
     const div = document.createElement("div");
-    div.innerText = u;
+
+    div.innerHTML = `
+      <span style="color:lime">●</span> ${u}
+    `;
+
+    /* DM click */
+    div.onclick = () => {
+      const msg = prompt("Send private message to " + u);
+      if (msg) {
+        socket.emit("privateMessage", {
+          to: u,
+          text: msg,
+          from: username,
+        });
+      }
+    };
+
     box.appendChild(div);
   });
 });
 
-/* MESSAGE */
+/* RECEIVE DM */
+socket.on("privateMessage", (data) => {
+  alert("DM from " + data.from + ": " + data.text);
+});
+
+/* CHAT */
 socket.on("message", (data) => {
+  let text = data.text;
+
+  if (data.reply) {
+    text = `↪ ${data.reply}\n${text}`;
+  }
+
   if (data.user === username) {
-    addMessage("You: " + data.text, "you");
+    addMessage("You: " + text, "you");
   } else {
-    addMessage(data.text, "other");
+    addMessage(data.user + ": " + text, "other");
   }
 });
 
@@ -89,63 +107,40 @@ function sendMessage() {
   socket.emit("chatMessage", {
     text: msg,
     user: username,
+    reply: replyTo,
   });
 
+  replyTo = null;
   input.value = "";
 }
 
-/* ADD MESSAGE */
+/* ADD MESSAGE + AVATAR + REPLY CLICK */
 function addMessage(msg, type) {
   const div = document.createElement("div");
   div.className = "message " + type;
 
-  if (msg.match(/\.(jpg|png|gif|jpeg)$/)) {
-    div.innerHTML = `<img src="${msg}" width="150">`;
-  } else {
-    div.innerText = msg;
-  }
+  const avatar = document.createElement("span");
+  avatar.innerText = msg[0];
+  avatar.style.marginRight = "8px";
+  avatar.style.background = "#555";
+  avatar.style.padding = "6px";
+  avatar.style.borderRadius = "50%";
+
+  div.appendChild(avatar);
+
+  const text = document.createElement("span");
+  text.innerText = msg;
+
+  div.appendChild(text);
+
+  /* reply click */
+  div.onclick = () => {
+    replyTo = msg;
+    input.placeholder = "Replying...";
+  };
 
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-/* FILE UPLOAD */
-function openFile() {
-  document.getElementById("fileInput").click();
-}
-
-document.getElementById("fileInput").onchange = () => {
-  const file = fileInput.files[0];
-
-  const formData = new FormData();
-  formData.append("file", file);
-
-  fetch("/upload", {
-    method: "POST",
-    body: formData,
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      socket.emit("chatMessage", {
-        text: data.file,
-        user: username,
-      });
-    });
-};
-
-/* CREATE ROOM */
-function createRoom() {
-  const name = prompt("Room name?");
-  const max = prompt("Max users?");
-
-  if (!name) return;
-
-  socket.emit("createRoom", {
-    room: name,
-    max: parseInt(max) || 10,
-  });
-
-  socket.emit("joinRoom", { username, room: name });
 }
 
 /* EXIT */
