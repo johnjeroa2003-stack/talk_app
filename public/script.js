@@ -5,9 +5,10 @@ let room = "";
 
 const chatBox = document.getElementById("chatBox");
 const input = document.getElementById("messageInput");
-const typingStatus = document.getElementById("typingStatus");
 
-/* ROOMS */
+/* =========================
+   ROOMS
+========================= */
 socket.emit("getRooms");
 
 socket.on("roomsList", (rooms) => {
@@ -16,12 +17,18 @@ socket.on("roomsList", (rooms) => {
 
   for (let r in rooms) {
     const div = document.createElement("div");
-    div.className = "card";
 
     div.innerHTML = `
-      <h3>${r}</h3>
-      <p>${rooms[r]} people inside</p>
-    `;
+            <h3>${r}</h3>
+            <p>${rooms[r]} people inside</p>
+        `;
+
+    div.style.margin = "20px";
+    div.style.padding = "20px";
+    div.style.background = "#111";
+    div.style.borderRadius = "10px";
+    div.style.display = "inline-block";
+    div.style.cursor = "pointer";
 
     div.onclick = () => joinRoom(r);
 
@@ -29,12 +36,14 @@ socket.on("roomsList", (rooms) => {
   }
 });
 
-/* JOIN */
+/* =========================
+   JOIN
+========================= */
 function joinRoom(r) {
   room = r;
 
   document.getElementById("lobby").style.display = "none";
-  document.getElementById("chatApp").style.display = "block";
+  document.getElementById("chatApp").style.display = "flex";
 
   document.getElementById("roomName").innerText = r;
 
@@ -43,7 +52,7 @@ function joinRoom(r) {
 
 /* RANDOM */
 function joinRandom() {
-  const rooms = document.querySelectorAll(".card");
+  const rooms = document.querySelectorAll("#roomCards div");
   if (rooms.length) rooms[Math.floor(Math.random() * rooms.length)].click();
 }
 
@@ -56,61 +65,44 @@ function createRoom() {
 /* SEARCH */
 function filterRooms() {
   const val = document.getElementById("searchRoom").value.toLowerCase();
-  document.querySelectorAll(".card").forEach((c) => {
+  document.querySelectorAll("#roomCards div").forEach((c) => {
     c.style.display = c.innerText.toLowerCase().includes(val)
-      ? "block"
+      ? "inline-block"
       : "none";
   });
 }
 
-/* CHAT */
+/* =========================
+   CHAT
+========================= */
 socket.on("message", (data) => {
   addMessage(data.text, "other");
 });
 
 function sendMessage() {
-  const msg = input.value;
+  const msg = input.value.trim();
   if (!msg) return;
 
   socket.emit("chatMessage", username + ": " + msg);
   addMessage("You: " + msg, "you");
 
   socket.emit("stopTyping");
+
   input.value = "";
 }
 
 function addMessage(msg, type) {
   const div = document.createElement("div");
   div.className = "message " + type;
-
-  if (msg.match(/\.(jpg|png|gif)$/)) {
-    div.innerHTML = `<img src="${msg}" width="150">`;
-  } else {
-    div.innerText = msg;
-  }
+  div.innerText = msg;
 
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-/* FILE */
-function openFile() {
-  document.getElementById("fileInput").click();
-}
-
-document.getElementById("fileInput").onchange = () => {
-  const file = fileInput.files[0];
-  const formData = new FormData();
-  formData.append("file", file);
-
-  fetch("/upload", { method: "POST", body: formData })
-    .then((res) => res.json())
-    .then((data) => {
-      socket.emit("chatMessage", data.file);
-    });
-};
-
-/* TYPING */
+/* =========================
+   TYPING
+========================= */
 input.addEventListener("input", () => {
   socket.emit("typing", username);
 
@@ -120,20 +112,21 @@ input.addEventListener("input", () => {
 });
 
 socket.on("typing", (user) => {
-  typingStatus.innerText = user + " is typing...";
+  document.getElementById("typingStatus").innerText = user + " is typing...";
 });
 
 socket.on("stopTyping", () => {
-  typingStatus.innerText = "";
+  document.getElementById("typingStatus").innerText = "";
 });
 
-/* VOICE (basic only) */
-async function startVoice() {
-  await navigator.mediaDevices.getUserMedia({ audio: true });
-  alert("Voice enabled (basic)");
-}
-
-/* EXIT */
+/* =========================
+   EXIT
+========================= */
 function leaveRoom() {
   location.reload();
 }
+
+/* ENTER KEY */
+input.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") sendMessage();
+});

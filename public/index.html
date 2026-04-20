@@ -1,65 +1,60 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Chat_As_You_Like</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+    <title>Chat_As_You_Like</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<!-- LOBBY -->
-<div id="lobby">
-  <h1 class="logo">Chat_As_You_Like</h1>
-  <p class="subtitle">Talk with Buddies</p>
+<!-- 🔥 LOBBY (UNCHANGED UI) -->
+<div id="lobby" style="text-align:center; padding-top:50px;">
 
-  <div class="top-buttons">
+    <h1 style="font-size:60px;">Chat_As_You_Like</h1>
+    <p style="color:gray;">Talk with Buddies</p>
+
     <button onclick="joinRandom()">Join Random Room</button>
     <button onclick="createRoom()">Create Room</button>
-  </div>
 
-  <input id="searchRoom" placeholder="Search rooms..." oninput="filterRooms()" />
+    <br><br>
 
-  <div id="roomCards" class="room-cards"></div>
+    <input id="searchRoom" placeholder="Search rooms..." oninput="filterRooms()" />
+
+    <div id="roomCards" style="margin-top:40px;"></div>
+
 </div>
 
-<!-- CHAT -->
-<div id="chatApp" style="display:none;">
-
-  <div class="chat-app">
+<!-- 💬 CHAT (YOUR ORIGINAL UI) -->
+<div id="chatApp" class="chat-app" style="display:none;">
 
     <div id="roomList"></div>
 
     <div class="chat-container">
 
-      <div class="chat-header">
-        <span id="roomName"></span>
-
-        <div>
-          <button onclick="startVoice()">🎤</button>
-          <button onclick="leaveRoom()">Exit</button>
+        <div class="chat-header">
+            <span id="roomName">Select Room</span>
+            <button onclick="leaveRoom()">Exit</button>
         </div>
-      </div>
 
-      <div id="chatBox" class="chat-box"></div>
+        <div id="chatBox" class="chat-box"></div>
 
-      <div id="typingStatus"></div>
+        <div id="typingStatus" style="color:gray; font-size:12px;"></div>
 
-      <div class="chat-input">
-        <input id="messageInput" placeholder="Type message..." />
-        <button onclick="sendMessage()">➤</button>
-        <button onclick="openFile()">📎</button>
-      </div>
+        <div class="chat-input">
+            <input id="messageInput" placeholder="Type message..." />
+            <button onclick="sendMessage()">➤</button>
+        </div>
 
     </div>
 
     <div id="usersList"></div>
 
-  </div>
-
 </div>
-
-<input type="file" id="fileInput" style="display:none">
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>
