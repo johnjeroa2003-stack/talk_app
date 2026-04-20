@@ -1,43 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>frenzio</title>
+  <title>Chat_As_You_Like</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<!-- ================= LOBBY ================= -->
+<!-- LOBBY -->
 <div id="lobby">
-
-  <h1 class="logo">frenzio</h1>
-  <p class="subtitle">Practice English by joining free public rooms</p>
+  <h1 class="logo">Chat_As_You_Like</h1>
+  <p class="subtitle">Talk with Buddies</p>
 
   <div class="top-buttons">
-    <button class="join-btn" onclick="joinRandom()">Join Random Room</button>
-    <button class="create-btn" onclick="createRoom()">Create Room</button>
+    <button onclick="joinRandom()">Join Random Room</button>
+    <button onclick="createRoom()">Create Room</button>
   </div>
 
   <input id="searchRoom" placeholder="Search rooms..." oninput="filterRooms()" />
 
   <div id="roomCards" class="room-cards"></div>
-
 </div>
 
-<!-- ================= CHAT ================= -->
+<!-- CHAT -->
 <div id="chatApp" style="display:none;">
 
   <div class="chat-app">
 
-    <!-- LEFT ROOMS -->
     <div id="roomList"></div>
 
-    <!-- CENTER -->
     <div class="chat-container">
 
       <div class="chat-header">
-        <span id="roomName">Room</span>
+        <span id="roomName"></span>
 
         <div>
           <button onclick="startVoice()">🎤</button>
@@ -47,19 +43,23 @@
 
       <div id="chatBox" class="chat-box"></div>
 
+      <div id="typingStatus"></div>
+
       <div class="chat-input">
         <input id="messageInput" placeholder="Type message..." />
         <button onclick="sendMessage()">➤</button>
+        <button onclick="openFile()">📎</button>
       </div>
 
     </div>
 
-    <!-- USERS -->
     <div id="usersList"></div>
 
   </div>
 
 </div>
+
+<input type="file" id="fileInput" style="display:none">
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>

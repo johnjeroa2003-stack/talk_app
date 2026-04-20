@@ -5,7 +5,6 @@ body {
   color: white;
 }
 
-/* LOBBY */
 #lobby {
   text-align: center;
   padding: 40px;
@@ -13,40 +12,12 @@ body {
 
 .logo {
   font-size: 50px;
-  font-weight: bold;
 }
 
 .subtitle {
   color: gray;
-  margin-bottom: 30px;
 }
 
-.top-buttons button {
-  padding: 12px 20px;
-  margin: 10px;
-  border-radius: 8px;
-  border: none;
-}
-
-.join-btn {
-  background: #22c55e;
-  color: white;
-}
-
-.create-btn {
-  background: #444;
-  color: white;
-}
-
-#searchRoom {
-  width: 50%;
-  padding: 12px;
-  margin: 20px;
-  border-radius: 8px;
-  border: none;
-}
-
-/* ROOM CARDS */
 .room-cards {
   display: flex;
   flex-wrap: wrap;
@@ -56,10 +27,9 @@ body {
 .card {
   background: #111;
   padding: 20px;
-  margin: 15px;
-  border-radius: 12px;
+  margin: 10px;
   width: 250px;
-  text-align: left;
+  border-radius: 10px;
   cursor: pointer;
 }
 
@@ -67,19 +37,9 @@ body {
   background: #222;
 }
 
-.people {
-  color: #22c55e;
-}
-
-/* CHAT (KEEP YOUR STYLE) */
 .chat-app {
   display: flex;
   height: 100vh;
-}
-
-#roomList {
-  width: 200px;
-  background: #111;
 }
 
 .chat-container {
@@ -99,7 +59,6 @@ body {
   flex: 1;
   overflow-y: auto;
   padding: 10px;
-  background: #000;
 }
 
 .message {
@@ -126,7 +85,8 @@ body {
   padding: 10px;
 }
 
-#usersList {
-  width: 150px;
-  background: #111;
+#typingStatus {
+  font-size: 12px;
+  color: gray;
+  padding-left: 10px;
 }
