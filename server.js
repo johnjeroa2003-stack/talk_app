@@ -10,13 +10,18 @@ const io = new Server(server);
 app.use(express.static("public"));
 
 /* =========================
-   DEFAULT ROOMS (IMPORTANT)
+   DEFAULT ROOMS
 ========================= */
 let rooms = {
   General: 0,
   Fun: 0,
   Study: 0,
 };
+
+/* =========================
+   ONLINE USERS TRACK
+========================= */
+let onlineUsers = {};
 
 /* =========================
    FILE STORAGE
@@ -35,10 +40,9 @@ app.post("/upload", upload.single("file"), (req, res) => {
 });
 
 /* =========================
-   SOCKET CONNECTION
+   SOCKET
 ========================= */
 io.on("connection", (socket) => {
-  /* SEND ROOMS */
   socket.on("getRooms", () => {
     socket.emit("roomsList", rooms);
   });
@@ -49,6 +53,9 @@ io.on("connection", (socket) => {
 
     socket.username = username;
     socket.room = room;
+
+    // 🟢 mark user online
+    onlineUsers[socket.id] = username;
 
     if (!rooms[room]) rooms[room] = 0;
     rooms[room]++;
@@ -63,7 +70,7 @@ io.on("connection", (socket) => {
     io.to(room).emit("roomUsers", getUsers(room));
   });
 
-  /* ROOM MESSAGE */
+  /* CHAT */
   socket.on("chatMessage", (msg) => {
     io.to(socket.room).emit("message", {
       text: msg,
@@ -71,9 +78,7 @@ io.on("connection", (socket) => {
     });
   });
 
-  /* =========================
-     PRIVATE MESSAGE (DM)
-  ========================= */
+  /* DM */
   socket.on("privateMessage", ({ to, message }) => {
     io.to(to).emit("privateMessage", {
       username: socket.username,
@@ -82,9 +87,7 @@ io.on("connection", (socket) => {
     });
   });
 
-  /* =========================
-     FILE SHARE (ROOM)
-  ========================= */
+  /* FILE */
   socket.on("fileMessage", ({ file, name }) => {
     io.to(socket.room).emit("fileMessage", {
       username: socket.username,
@@ -93,7 +96,6 @@ io.on("connection", (socket) => {
     });
   });
 
-  /* FILE SHARE (DM) */
   socket.on("privateFile", ({ to, file, name }) => {
     io.to(to).emit("privateFile", {
       username: socket.username,
@@ -102,9 +104,7 @@ io.on("connection", (socket) => {
     });
   });
 
-  /* =========================
-     TYPING (ROOM)
-  ========================= */
+  /* TYPING */
   socket.on("typing", (user) => {
     socket.to(socket.room).emit("typing", user);
   });
@@ -113,9 +113,6 @@ io.on("connection", (socket) => {
     socket.to(socket.room).emit("stopTyping");
   });
 
-  /* =========================
-     TYPING (DM)
-  ========================= */
   socket.on("typingDM", ({ to, user }) => {
     io.to(to).emit("typingDM", user);
   });
@@ -124,10 +121,10 @@ io.on("connection", (socket) => {
     io.to(to).emit("stopTypingDM");
   });
 
-  /* =========================
-     DISCONNECT
-  ========================= */
+  /* DISCONNECT */
   socket.on("disconnect", () => {
+    delete onlineUsers[socket.id]; // 🔴 offline
+
     if (socket.room && rooms[socket.room]) {
       rooms[socket.room]--;
       if (rooms[socket.room] <= 0) rooms[socket.room] = 0;
@@ -138,24 +135,20 @@ io.on("connection", (socket) => {
   });
 });
 
-/* =========================
-   GET USERS
-========================= */
+/* GET USERS */
 function getUsers(room) {
   const clients = io.sockets.adapter.rooms.get(room);
   if (!clients) return [];
 
   return [...clients].map((id) => {
     const s = io.sockets.sockets.get(id);
-    return { id, name: s?.username || "User" };
+    return {
+      id,
+      name: s?.username || "User",
+      online: true, // always online if in room
+    };
   });
 }
 
-/* =========================
-   START SERVER
-========================= */
 const PORT = process.env.PORT || 3000;
-
-server.listen(PORT, () => {
-  console.log("🚀 Server running on " + PORT);
-});
+server.listen(PORT, () => console.log("🚀 Server running"));

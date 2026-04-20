@@ -1,137 +1,189 @@
+/* =========================
+   GLOBAL
+========================= */
 body {
-    margin: 0;
-    font-family: 'Poppins', sans-serif;
-    background: #0f172a;
-    color: white;
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: #0f172a;
+  color: white;
 }
 
-/* LOGIN */
+/* =========================
+   LOGIN
+========================= */
 .login-container {
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .login-box {
-    background: #1e293b;
-    padding: 30px;
-    border-radius: 15px;
-    width: 300px;
-    text-align: center;
+  background: #1e293b;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  width: 280px;
 }
 
 .login-box input,
 .login-box select {
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    border-radius: 8px;
-    border: none;
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 6px;
+  border: none;
 }
 
 .login-box button {
-    margin-top: 15px;
-    width: 100%;
-    padding: 12px;
-    background: #6366f1;
-    border: none;
-    border-radius: 10px;
-    color: white;
-    cursor: pointer;
+  width: 100%;
+  padding: 10px;
+  background: #6366f1;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
 }
 
-/* CHAT LAYOUT */
+/* =========================
+   MAIN APP
+========================= */
 .chat-app {
-    display: none;
-    height: 100vh;
-    display: flex;
+  display: flex;
+  height: 100vh;
 }
 
-/* SIDEBAR */
-.sidebar {
-    width: 250px;
-    background: #1e293b;
-    padding: 20px;
+/* =========================
+   SIDEBAR (ROOMS)
+========================= */
+#roomList {
+  width: 220px;
+  background: #1e293b;
+  padding: 10px;
+  overflow-y: auto;
 }
 
-.sidebar ul {
-    list-style: none;
-    padding: 0;
+.room {
+  padding: 10px;
+  margin: 6px 0;
+  background: #334155;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
 }
 
-.sidebar li {
-    padding: 10px;
-    margin-bottom: 10px;
-    background: #334155;
-    border-radius: 10px;
-    cursor: pointer;
+.room:hover {
+  background: #475569;
 }
 
-.sidebar li:hover,
-.sidebar .active {
-    background: #6366f1;
+/* =========================
+   CHAT AREA
+========================= */
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-/* CHAT MAIN */
-.chat-main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
+/* HEADER */
 .chat-header {
-    padding: 15px;
-    background: #1e293b;
-    display: flex;
-    justify-content: space-between;
+  display: flex;
+  justify-content: space-between;
+  background: #1e293b;
+  padding: 12px;
+  font-weight: 500;
+}
+
+.chat-header button {
+  background: red;
+  border: none;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 5px;
 }
 
 /* CHAT BOX */
 .chat-box {
-    flex: 1;
-    padding: 15px;
-    overflow-y: auto;
+  flex: 1;
+  background: #020617;
+  padding: 15px;
+  overflow-y: auto;
 }
 
-/* MESSAGES */
+/* =========================
+   MESSAGES
+========================= */
 .message {
-    max-width: 60%;
-    padding: 10px;
-    border-radius: 10px;
-    margin-bottom: 10px;
+  max-width: 65%;
+  padding: 10px 14px;
+  margin: 6px 0;
+  border-radius: 12px;
+  background: #334155;
+  font-size: 14px;
+  word-wrap: break-word;
 }
 
+/* YOU */
 .message.you {
-    background: #6366f1;
-    margin-left: auto;
+  background: #6366f1;
+  margin-left: auto;
 }
 
+/* OTHER */
 .message.other {
-    background: #334155;
-    margin-right: auto;
+  margin-right: auto;
 }
 
-/* INPUT */
+/* IMAGE */
+.message img {
+  border-radius: 8px;
+  margin-top: 5px;
+}
+
+/* =========================
+   INPUT
+========================= */
 .chat-input {
-    display: flex;
-    padding: 10px;
-    background: #1e293b;
+  display: flex;
+  padding: 10px;
+  background: #1e293b;
 }
 
 .chat-input input {
-    flex: 1;
-    padding: 10px;
-    border-radius: 10px;
-    border: none;
+  flex: 1;
+  padding: 10px;
+  border-radius: 20px;
+  border: none;
 }
 
 .chat-input button {
-    margin-left: 10px;
-    padding: 10px 15px;
-    border-radius: 10px;
-    background: #6366f1;
-    border: none;
-    color: white;
-    cursor: pointer;
+  margin-left: 10px;
+  padding: 10px 15px;
+  border-radius: 50%;
+  background: #6366f1;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+/* =========================
+   USERS LIST
+========================= */
+#usersList {
+  width: 180px;
+  background: #1e293b;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+#usersList div {
+  padding: 6px;
+  margin: 4px 0;
+  border-radius: 6px;
+  background: #334155;
+  cursor: pointer;
+}
+
+#usersList div:hover {
+  background: #475569;
 }

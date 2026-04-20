@@ -33,6 +33,7 @@ socket.on("roomsList", (rooms) => {
 
   for (let r in rooms) {
     const div = document.createElement("div");
+    div.classList.add("room");
     div.innerText = `${r} (${rooms[r]})`;
     div.onclick = () => joinRoom(r);
     roomListDiv.appendChild(div);
@@ -57,7 +58,7 @@ socket.on("roomUsers", (users) => {
 
   users.forEach((u) => {
     const div = document.createElement("div");
-    div.innerText = u.name;
+    div.innerText = "🟢 " + u.name;
 
     div.onclick = () => {
       currentDM = u.id;
@@ -73,12 +74,12 @@ socket.on("roomUsers", (users) => {
    RECEIVE
 ========================= */
 socket.on("message", (data) => {
-  if (!currentDM) addMessage(data.text, data.status);
+  if (!currentDM) addMessage(data.text, "other", data.status);
 });
 
 socket.on("privateMessage", ({ username, message, status }) => {
   notify.play();
-  addMessage("🔒 " + username + ": " + message, status);
+  addMessage("🔒 " + username + ": " + message, "other", status);
 });
 
 /* =========================
@@ -101,11 +102,11 @@ function sendMessage() {
 
   if (currentDM) {
     socket.emit("privateMessage", { to: currentDM, message: msg });
-    addMessage("🔒 You: " + msg, "✔");
+    addMessage("🔒 You: " + msg, "you", "✔");
     saveChat("dm_" + currentDM);
   } else {
     socket.emit("chatMessage", username + ": " + msg);
-    addMessage("You: " + msg, "✔");
+    addMessage("You: " + msg, "you", "✔");
     saveChat("room_" + room);
   }
 
@@ -141,17 +142,20 @@ function sendFile(file) {
 }
 
 /* =========================
-   UI
+   MESSAGE UI (FIXED)
 ========================= */
-function addMessage(msg, status = "") {
+function addMessage(msg, type = "other", status = "") {
   const div = document.createElement("div");
-  div.className = "message";
-  div.innerText = msg + " " + status;
+  div.classList.add("message", type);
+  div.innerText = msg + (status ? " " + status : "");
 
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
+/* =========================
+   FILE UI
+========================= */
 function addFile(user, file, name) {
   const div = document.createElement("div");
   div.className = "message";
@@ -166,6 +170,9 @@ function addFile(user, file, name) {
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
+/* =========================
+   SYSTEM MSG
+========================= */
 function addSystem(msg) {
   const div = document.createElement("div");
   div.className = "message";
@@ -226,7 +233,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 /* =========================
-   EXIT BUTTON FIX
+   EXIT FIX
 ========================= */
 function leaveRoom() {
   room = "";
@@ -244,8 +251,6 @@ function leaveRoom() {
   document.getElementById("loginScreen").style.display = "flex";
 
   input.value = "";
-
-  console.log("🚪 Exited room");
 }
 
 /* =========================
