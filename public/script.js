@@ -19,41 +19,42 @@ socket.on("roomsList", (rooms) => {
 
     div.innerHTML = `
       <h3>${r}</h3>
-      <p>${rooms[r].users} / ${rooms[r].max} users</p>
+      <p>${rooms[r].users} / ${rooms[r].max}</p>
     `;
 
-    div.onclick = () => joinRoom(r);
+    div.onclick = () => {
+      socket.emit("joinRoom", { username, room: r });
+    };
 
     container.appendChild(div);
   }
 });
 
-/* JOIN */
-function joinRoom(r) {
+/* JOIN SUCCESS */
+socket.on("joinedRoom", (r) => {
   room = r;
-  socket.emit("joinRoom", { username, room });
-}
+
+  document.getElementById("lobby").style.display = "none";
+  document.getElementById("chatApp").style.display = "flex";
+
+  document.getElementById("roomName").innerText = r;
+});
 
 /* ROOM FULL */
 socket.on("roomFull", () => {
-  alert("❌ Room is full");
+  alert("Room is full");
 });
 
-/* MESSAGE (FIXED) */
+/* MESSAGE */
 socket.on("message", (data) => {
-  if (data.user === "system") {
-    addMessage(data.text, "other");
-    return;
-  }
-
   if (data.user === username) {
     addMessage("You: " + data.text, "you");
   } else {
-    addMessage(data.user + ": " + data.text, "other");
+    addMessage(data.text, "other");
   }
 });
 
-/* SEND MESSAGE (FIXED) */
+/* SEND */
 function sendMessage() {
   const msg = input.value.trim();
   if (!msg) return;
@@ -66,51 +67,37 @@ function sendMessage() {
   input.value = "";
 }
 
-/* ADD MESSAGE (WHATSAPP STYLE + IMAGE SUPPORT) */
+/* UI MESSAGE */
 function addMessage(msg, type) {
   const div = document.createElement("div");
   div.className = "message " + type;
-
-  if (msg.match(/\.(jpg|png|gif|jpeg)$/)) {
-    div.innerHTML = `<img src="${msg}" width="150">`;
-  } else {
-    div.innerText = msg;
-  }
+  div.innerText = msg;
 
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-/* FILE UPLOAD */
-function openFile() {
-  document.getElementById("fileInput").click();
+/* CREATE ROOM */
+function createRoom() {
+  const name = prompt("Room name?");
+  const max = prompt("Max users?");
+
+  if (!name) return;
+
+  socket.emit("createRoom", {
+    room: name,
+    max: parseInt(max) || 10,
+  });
+
+  socket.emit("joinRoom", { username, room: name });
 }
-
-document.getElementById("fileInput").onchange = () => {
-  const file = fileInput.files[0];
-
-  const formData = new FormData();
-  formData.append("file", file);
-
-  fetch("/upload", {
-    method: "POST",
-    body: formData,
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      socket.emit("chatMessage", {
-        text: data.file,
-        user: username,
-      });
-    });
-};
 
 /* EXIT */
 function leaveRoom() {
   location.reload();
 }
 
-/* ENTER KEY */
+/* ENTER */
 input.addEventListener("keypress", (e) => {
   if (e.key === "Enter") sendMessage();
 });
