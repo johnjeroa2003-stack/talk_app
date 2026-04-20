@@ -9,53 +9,39 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-/* =========================
-   DEFAULT ROOMS
-========================= */
+/* ROOMS */
 let rooms = {
   General: 0,
   Fun: 0,
   Study: 0,
 };
 
-/* =========================
-   ONLINE USERS TRACK
-========================= */
-let onlineUsers = {};
+/* VOICE ROOMS */
+let voiceRooms = {};
 
-/* =========================
-   FILE STORAGE
-========================= */
+/* FILE UPLOAD */
 const storage = multer.diskStorage({
   destination: "./public/uploads/",
   filename: (req, file, cb) => {
     cb(null, Date.now() + "-" + file.originalname);
   },
 });
-
 const upload = multer({ storage });
 
 app.post("/upload", upload.single("file"), (req, res) => {
   res.json({ file: "/uploads/" + req.file.filename });
 });
 
-/* =========================
-   SOCKET
-========================= */
+/* SOCKET */
 io.on("connection", (socket) => {
   socket.on("getRooms", () => {
     socket.emit("roomsList", rooms);
   });
 
-  /* JOIN ROOM */
   socket.on("joinRoom", ({ username, room }) => {
     socket.join(room);
-
     socket.username = username;
     socket.room = room;
-
-    // 🟢 mark user online
-    onlineUsers[socket.id] = username;
 
     if (!rooms[room]) rooms[room] = 0;
     rooms[room]++;
@@ -66,11 +52,9 @@ io.on("connection", (socket) => {
     });
 
     io.emit("roomsList", rooms);
-
     io.to(room).emit("roomUsers", getUsers(room));
   });
 
-  /* CHAT */
   socket.on("chatMessage", (msg) => {
     io.to(socket.room).emit("message", {
       text: msg,
@@ -78,7 +62,6 @@ io.on("connection", (socket) => {
     });
   });
 
-  /* DM */
   socket.on("privateMessage", ({ to, message }) => {
     io.to(to).emit("privateMessage", {
       username: socket.username,
@@ -87,7 +70,6 @@ io.on("connection", (socket) => {
     });
   });
 
-  /* FILE */
   socket.on("fileMessage", ({ file, name }) => {
     io.to(socket.room).emit("fileMessage", {
       username: socket.username,
@@ -113,42 +95,51 @@ io.on("connection", (socket) => {
     socket.to(socket.room).emit("stopTyping");
   });
 
-  socket.on("typingDM", ({ to, user }) => {
-    io.to(to).emit("typingDM", user);
+  /* VOICE */
+  socket.on("joinVoice", (room) => {
+    socket.join("voice_" + room);
+
+    if (!voiceRooms[room]) voiceRooms[room] = [];
+    voiceRooms[room].push(socket.id);
+
+    io.to("voice_" + room).emit("voiceUsers", voiceRooms[room]);
   });
 
-  socket.on("stopTypingDM", ({ to }) => {
-    io.to(to).emit("stopTypingDM");
+  socket.on("offer", ({ to, offer }) => {
+    io.to(to).emit("offer", { from: socket.id, offer });
   });
 
-  /* DISCONNECT */
+  socket.on("answer", ({ to, answer }) => {
+    io.to(to).emit("answer", { from: socket.id, answer });
+  });
+
+  socket.on("ice", ({ to, candidate }) => {
+    io.to(to).emit("ice", { from: socket.id, candidate });
+  });
+
   socket.on("disconnect", () => {
-    delete onlineUsers[socket.id]; // 🔴 offline
-
     if (socket.room && rooms[socket.room]) {
       rooms[socket.room]--;
-      if (rooms[socket.room] <= 0) rooms[socket.room] = 0;
+      if (rooms[socket.room] < 0) rooms[socket.room] = 0;
 
       io.emit("roomsList", rooms);
       io.to(socket.room).emit("roomUsers", getUsers(socket.room));
     }
+
+    for (let r in voiceRooms) {
+      voiceRooms[r] = voiceRooms[r].filter((id) => id !== socket.id);
+    }
   });
 });
 
-/* GET USERS */
 function getUsers(room) {
   const clients = io.sockets.adapter.rooms.get(room);
   if (!clients) return [];
 
   return [...clients].map((id) => {
     const s = io.sockets.sockets.get(id);
-    return {
-      id,
-      name: s?.username || "User",
-      online: true, // always online if in room
-    };
+    return { id, name: s?.username || "User" };
   });
 }
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log("🚀 Server running"));
+server.listen(3000, () => console.log("🚀 Server running"));

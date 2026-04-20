@@ -2,57 +2,33 @@
 <html>
 <head>
   <title>Chat App</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<!-- LOGIN -->
-<div id="loginScreen" class="login">
-  <div class="login-box">
-    <h2>Join Chat</h2>
-    <input id="usernameInput" placeholder="Enter name" />
-    <button onclick="enterApp()">Enter</button>
-  </div>
+<div id="loginScreen">
+  <input id="usernameInput" placeholder="Name">
+  <button onclick="enterApp()">Enter</button>
 </div>
 
-<!-- APP -->
-<div id="chatApp" class="app">
+<div id="chatApp" style="display:none;">
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <h3>🌐 Rooms</h3>
-    <div id="roomList" class="rooms"></div>
-  </div>
+  <div id="roomList"></div>
 
-  <!-- MAIN -->
-  <div class="main">
-
-    <!-- HEADER -->
-    <div class="header">
-      <span id="roomName">Select Room</span>
+  <div>
+    <div>
+      <span id="roomName"></span>
+      <button onclick="startVoice()">🎤</button>
       <button onclick="leaveRoom()">Exit</button>
     </div>
 
-    <!-- CHAT -->
-    <div id="chatBox" class="chat"></div>
+    <div id="chatBox"></div>
 
-    <!-- INPUT -->
-    <div class="input-area">
-      <input id="messageInput" placeholder="Type message..." />
-      <button onclick="sendMessage()">➤</button>
-    </div>
-
+    <input id="messageInput">
+    <button onclick="sendMessage()">Send</button>
   </div>
 
-  <!-- USERS -->
-  <div class="users">
-    <h3>👥 Users</h3>
-    <div id="usersList"></div>
-  </div>
+  <div id="usersList"></div>
 
 </div>
 
