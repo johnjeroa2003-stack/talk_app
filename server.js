@@ -8,6 +8,7 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 app.use(express.static("public"));
+app.use("/uploads", express.static("public/uploads"));
 
 /* FILE UPLOAD */
 const storage = multer.diskStorage({
@@ -31,12 +32,11 @@ let rooms = {
 
 /* SOCKET */
 io.on("connection", (socket) => {
-  /* SEND ROOMS */
   socket.on("getRooms", () => {
     socket.emit("roomsList", rooms);
   });
 
-  /* 🔥 CREATE ROOM WITH LIMIT (ADDED) */
+  /* CREATE ROOM */
   socket.on("createRoom", ({ room, max }) => {
     if (!rooms[room]) {
       rooms[room] = { users: 0, max: max || 10 };
@@ -50,7 +50,6 @@ io.on("connection", (socket) => {
       rooms[room] = { users: 0, max: 10 };
     }
 
-    /* CHECK LIMIT */
     if (rooms[room].users >= rooms[room].max) {
       socket.emit("roomFull");
       return;
@@ -66,12 +65,16 @@ io.on("connection", (socket) => {
 
     io.to(room).emit("message", {
       text: username + " joined the room",
+      user: "system",
     });
   });
 
-  /* CHAT */
-  socket.on("chatMessage", (msg) => {
-    io.to(socket.room).emit("message", { text: msg });
+  /* CHAT (FIXED) */
+  socket.on("chatMessage", (data) => {
+    io.to(socket.room).emit("message", {
+      text: data.text,
+      user: data.user,
+    });
   });
 
   /* TYPING */
@@ -91,8 +94,13 @@ io.on("connection", (socket) => {
       if (rooms[socket.room].users < 0) rooms[socket.room].users = 0;
 
       io.emit("roomsList", rooms);
+
+      io.to(socket.room).emit("message", {
+        text: socket.username + " left the room",
+        user: "system",
+      });
     }
   });
 });
 
-server.listen(3000, () => console.log("Server running"));
+server.listen(3000, () => console.log("🚀 Server running"));

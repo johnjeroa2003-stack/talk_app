@@ -6,7 +6,7 @@ let room = "";
 const chatBox = document.getElementById("chatBox");
 const input = document.getElementById("messageInput");
 
-/* ROOMS */
+/* LOAD ROOMS */
 socket.emit("getRooms");
 
 socket.on("roomsList", (rooms) => {
@@ -31,70 +31,42 @@ socket.on("roomsList", (rooms) => {
 /* JOIN */
 function joinRoom(r) {
   room = r;
-
   socket.emit("joinRoom", { username, room });
 }
 
-/* HANDLE FULL ROOM */
+/* ROOM FULL */
 socket.on("roomFull", () => {
   alert("❌ Room is full");
 });
 
-/* WHEN JOIN SUCCESS */
+/* MESSAGE (FIXED) */
 socket.on("message", (data) => {
-  if (data.text.includes("joined the room")) {
-    document.getElementById("lobby").style.display = "none";
-    document.getElementById("chatApp").style.display = "flex";
-    document.getElementById("roomName").innerText = room;
+  if (data.user === "system") {
+    addMessage(data.text, "other");
+    return;
   }
 
-  addMessage(data.text, "other");
+  if (data.user === username) {
+    addMessage("You: " + data.text, "you");
+  } else {
+    addMessage(data.user + ": " + data.text, "other");
+  }
 });
 
-/* RANDOM */
-function joinRandom() {
-  const cards = document.querySelectorAll(".card");
-  if (cards.length) cards[Math.floor(Math.random() * cards.length)].click();
-}
-
-/* CREATE ROOM WITH LIMIT */
-function createRoom() {
-  const name = prompt("Room name?");
-  const max = prompt("Max users? (e.g. 5)");
-
-  if (!name || !max) return;
-
-  socket.emit("createRoom", {
-    room: name,
-    max: parseInt(max),
-  });
-
-  joinRoom(name);
-}
-
-/* SEARCH */
-function filterRooms() {
-  const val = document.getElementById("searchRoom").value.toLowerCase();
-
-  document.querySelectorAll(".card").forEach((c) => {
-    c.style.display = c.innerText.toLowerCase().includes(val)
-      ? "block"
-      : "none";
-  });
-}
-
-/* CHAT */
+/* SEND MESSAGE (FIXED) */
 function sendMessage() {
   const msg = input.value.trim();
   if (!msg) return;
 
-  socket.emit("chatMessage", username + ": " + msg);
-  addMessage("You: " + msg, "you");
+  socket.emit("chatMessage", {
+    text: msg,
+    user: username,
+  });
 
-  socket.emit("stopTyping");
   input.value = "";
 }
 
+/* ADD MESSAGE (WHATSAPP STYLE + IMAGE SUPPORT) */
 function addMessage(msg, type) {
   const div = document.createElement("div");
   div.className = "message " + type;
@@ -109,21 +81,36 @@ function addMessage(msg, type) {
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-/* TYPING */
-input.addEventListener("input", () => {
-  socket.emit("typing", username);
+/* FILE UPLOAD */
+function openFile() {
+  document.getElementById("fileInput").click();
+}
 
-  setTimeout(() => {
-    socket.emit("stopTyping");
-  }, 1000);
-});
+document.getElementById("fileInput").onchange = () => {
+  const file = fileInput.files[0];
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  fetch("/upload", {
+    method: "POST",
+    body: formData,
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      socket.emit("chatMessage", {
+        text: data.file,
+        user: username,
+      });
+    });
+};
 
 /* EXIT */
 function leaveRoom() {
   location.reload();
 }
 
-/* ENTER */
+/* ENTER KEY */
 input.addEventListener("keypress", (e) => {
   if (e.key === "Enter") sendMessage();
 });
