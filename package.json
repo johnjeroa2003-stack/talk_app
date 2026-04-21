@@ -9,5 +9,17 @@
     "express": "^4.22.1",
     "multer": "^2.1.1",
     "socket.io": "^4.8.3"
-  }
+  },
+  "description": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johnjeroa2003-stack/talk_app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/johnjeroa2003-stack/talk_app/issues"
+  },
+  "homepage": "https://github.com/johnjeroa2003-stack/talk_app#readme"
 }
