@@ -6,7 +6,16 @@ const socket = io();
 const roomCards = document.getElementById("roomCards");
 const chatBox = document.getElementById("chatBox");
 const input = document.getElementById("messageInput");
+let typingTimeout;
 
+input.addEventListener("input", () => {
+  socket.emit("typing", username);
+
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {
+    socket.emit("stopTyping");
+  }, 1000);
+});
 let username = "User" + Math.floor(Math.random() * 1000);
 let currentRoom = "";
 
@@ -256,4 +265,21 @@ function addDMMessage(msg) {
 socket.on("privateMessage", ({ text, from }) => {
   openDM(from);
   addDMMessage(from + ": " + text);
+});
+
+/* =========================
+   SHOW TYPING
+========================= */
+socket.on("typing", (user) => {
+  const box = document.getElementById("typingStatus");
+  if (!box) return;
+
+  box.innerText = user + " is typing...";
+});
+
+socket.on("stopTyping", () => {
+  const box = document.getElementById("typingStatus");
+  if (!box) return;
+
+  box.innerText = "";
 });
