@@ -31,25 +31,57 @@ let rooms = {
 };
 
 let usersInRoom = {};
-let userSockets = {}; // for DM
+let userSockets = {};
 
 io.on("connection", (socket) => {
-  /* GET ROOMS */
+  /* =========================
+     GET ROOMS
+  ========================= */
   socket.on("getRooms", () => {
     socket.emit("roomsList", rooms);
   });
 
-  /* CREATE ROOM */
+  /* =========================
+     CREATE ROOM (FIXED)
+  ========================= */
   socket.on("createRoom", ({ room, max }) => {
+    if (!room) return;
+
     if (!rooms[room]) {
       rooms[room] = { users: 0, max: max || 10 };
+
+      // send updated rooms to ALL users
       io.emit("roomsList", rooms);
+
+      // confirm to creator
+      socket.emit("message", {
+        user: "system",
+        text: `Room "${room}" created successfully`,
+      });
+    } else {
+      socket.emit("message", {
+        user: "system",
+        text: "Room already exists",
+      });
     }
   });
 
-  /* JOIN ROOM */
+  /* =========================
+     JOIN ROOM (FIXED)
+  ========================= */
   socket.on("joinRoom", ({ username, room }) => {
-    if (!rooms[room]) rooms[room] = { users: 0, max: 10 };
+    if (!room || !username) return;
+
+    if (!rooms[room]) {
+      socket.emit("message", {
+        user: "system",
+        text: "Room does not exist",
+      });
+      return;
+    }
+
+    // prevent duplicate join
+    if (socket.room === room) return;
 
     socket.join(room);
     socket.username = username;
@@ -60,23 +92,30 @@ io.on("connection", (socket) => {
     rooms[room].users++;
 
     if (!usersInRoom[room]) usersInRoom[room] = [];
-    usersInRoom[room].push(username);
 
+    if (!usersInRoom[room].includes(username)) {
+      usersInRoom[room].push(username);
+    }
+
+    // update rooms everywhere
     io.emit("roomsList", rooms);
 
-    socket.emit("joinedRoom", room);
-    io.to(room).emit("roomUsers", usersInRoom[room]);
+    // send updated users
+    io.to(room).emit("onlineUsers", usersInRoom[room]);
 
+    // system message
     io.to(room).emit("message", {
       text: username + " joined",
       user: "system",
     });
-
-    io.to(room).emit("onlineUsers", usersInRoom[room]);
   });
 
-  /* GROUP CHAT */
+  /* =========================
+     CHAT
+  ========================= */
   socket.on("chatMessage", (data) => {
+    if (!socket.room) return;
+
     io.to(socket.room).emit("message", {
       text: data.text,
       user: data.user,
@@ -86,24 +125,29 @@ io.on("connection", (socket) => {
   });
 
   /* =========================
-     MESSAGE REACTIONS (ADDED)
+     REACTIONS
   ========================= */
   socket.on("reactMessage", ({ id, emoji }) => {
+    if (!socket.room) return;
     io.to(socket.room).emit("messageReaction", { id, emoji });
   });
 
   /* =========================
-     TYPING INDICATOR
+     TYPING
   ========================= */
   socket.on("typing", (user) => {
+    if (!socket.room) return;
     socket.to(socket.room).emit("typing", user);
   });
 
   socket.on("stopTyping", () => {
+    if (!socket.room) return;
     socket.to(socket.room).emit("stopTyping");
   });
 
-  /* PRIVATE CHAT */
+  /* =========================
+     PRIVATE CHAT
+  ========================= */
   socket.on("privateMessage", ({ to, text, from }) => {
     const target = userSockets[to];
     if (target) {
@@ -111,21 +155,27 @@ io.on("connection", (socket) => {
     }
   });
 
-  /* DISCONNECT */
+  /* =========================
+     DISCONNECT (FIXED)
+  ========================= */
   socket.on("disconnect", () => {
     if (socket.room && rooms[socket.room]) {
-      rooms[socket.room].users--;
+      rooms[socket.room].users = Math.max(0, rooms[socket.room].users - 1);
 
       usersInRoom[socket.room] = (usersInRoom[socket.room] || []).filter(
         (u) => u !== socket.username,
       );
 
-      io.emit("roomsList", rooms);
-      io.to(socket.room).emit("roomUsers", usersInRoom[socket.room]);
+      // remove empty room users list
+      if (usersInRoom[socket.room].length === 0) {
+        delete usersInRoom[socket.room];
+      }
 
-      io.to(socket.room).emit("onlineUsers", usersInRoom[socket.room]);
+      // update UI everywhere
+      io.emit("roomsList", rooms);
+      io.to(socket.room).emit("onlineUsers", usersInRoom[socket.room] || []);
     }
   });
 });
 
-server.listen(3000, () => console.log("🚀 Server running"));
+server.listen(3000, () => console.log("🚀 Server running on port 3000"));
