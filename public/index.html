@@ -39,8 +39,17 @@
   </div>
 
   <div id="onlineUsers" class="online-users"></div>
+
   <div id="chatBox" class="chat-box"></div>
+
   <div id="typingStatus" style="padding:5px; font-size:12px; color:gray;"></div>
+
+  <!-- ✅ REPLY BOX (ADDED CORRECTLY) -->
+  <div id="replyBox" style="display:none; padding:5px; background:#eee;">
+    Replying: <span id="replyText"></span>
+    <button onclick="cancelReply()">❌</button>
+  </div>
+
   <div class="chat-input">
     <input id="messageInput" placeholder="Type message...">
     <button onclick="sendMessage()">➤</button>
@@ -52,7 +61,7 @@
 
 </div>
 
-<!-- ✅ ADDED ONLY THIS (NO CHANGE ABOVE) -->
+<!-- USER POPUP -->
 <div id="userPopup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:999;">
 
   <div style="background:white; padding:20px; border-radius:10px; width:300px; text-align:center;">
@@ -77,8 +86,10 @@
 
 </div>
 
+<!-- SOCKET -->
 <script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>
+
 <!-- PRIVATE CHAT POPUP -->
 <div id="dmBox" style="display:none; position:fixed; bottom:0; right:10px; width:250px; background:white; border:1px solid #ccc; border-radius:10px; z-index:999;">
 
@@ -95,5 +106,6 @@
   </div>
 
 </div>
+
 </body>
 </html>

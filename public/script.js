@@ -18,7 +18,7 @@ let userProfile = {
   gender: "",
   avatar: "",
 };
-
+let replyingTo = null;
 /* =========================
    TYPING SEND
 ========================= */
@@ -141,28 +141,29 @@ function sendMessage() {
   socket.emit("chatMessage", {
     text: msg,
     user: username,
+    reply: replyingTo,
   });
 
+  replyingTo = null; // reset reply
   input.value = "";
 }
 
 socket.on("message", (data) => {
   if (data.user === "system") {
-    addMessage(data.text, "other", "");
+    addMessage(data.text, "other", "", null);
     return;
   }
 
   if (data.user === username) {
-    addMessage("You: " + data.text, "you", data.avatar);
+    addMessage("You: " + data.text, "you", data.avatar, data.reply);
   } else {
-    addMessage(data.user + ": " + data.text, "other", data.avatar);
+    addMessage(data.user + ": " + data.text, "other", data.avatar, data.reply);
   }
 });
-
 /* =========================
    ADD MESSAGE UI (FIXED)
 ========================= */
-function addMessage(msg, type, avatar) {
+function addMessage(msg, type, avatar, reply = null) {
   const div = document.createElement("div");
   div.className = "message " + type;
 
@@ -171,20 +172,25 @@ function addMessage(msg, type, avatar) {
       ? `<img src="${avatar}" class="avatar">`
       : `<img src="https://i.imgur.com/6VBx3io.png" class="avatar">`;
 
-  // ✅ ONE message ID (fixed)
   const messageId = Date.now();
   div.dataset.id = messageId;
+
+  let replyHTML = "";
+  if (reply) {
+    replyHTML = `<div style="font-size:12px; opacity:0.7;">↪ ${reply}</div>`;
+  }
 
   div.innerHTML = `
     ${type === "other" ? img : ""}
     <div>
+      ${replyHTML}
       <span>${msg}</span>
       <div class="reactions"></div>
     </div>
     ${type === "you" ? img : ""}
   `;
 
-  // ✅ ONE click handler (fixed)
+  // 👉 click = react
   div.onclick = () => {
     const emoji = prompt("React 👍 ❤️ 😂 😡");
     if (!emoji) return;
@@ -193,6 +199,13 @@ function addMessage(msg, type, avatar) {
       id: messageId,
       emoji,
     });
+  };
+
+  // 👉 RIGHT CLICK / HOLD = reply
+  div.oncontextmenu = (e) => {
+    e.preventDefault();
+    replyingTo = msg;
+    alert("Replying to: " + msg);
   };
 
   chatBox.appendChild(div);
