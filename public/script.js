@@ -20,6 +20,8 @@ let userProfile = {
 };
 
 let replyingTo = null;
+let touchStartX = 0;
+let touchEndX = 0;
 
 /* =========================
    TYPING SEND
@@ -51,7 +53,6 @@ socket.on("roomsList", (rooms) => {
     `;
 
     div.onclick = () => joinRoom(room);
-
     roomCards.appendChild(div);
   }
 });
@@ -148,7 +149,6 @@ function sendMessage() {
 
   replyingTo = null;
   document.getElementById("replyBox").style.display = "none";
-
   input.value = "";
 }
 
@@ -167,7 +167,7 @@ socket.on("message", (data) => {
 });
 
 /* =========================
-   ADD MESSAGE UI
+   ADD MESSAGE UI (FINAL + SWIPE)
 ========================= */
 function addMessage(msg, type, avatar, reply = null) {
   const div = document.createElement("div");
@@ -210,12 +210,46 @@ function addMessage(msg, type, avatar, reply = null) {
   /* RIGHT CLICK = REPLY */
   div.oncontextmenu = (e) => {
     e.preventDefault();
-
     replyingTo = msg;
 
     document.getElementById("replyBox").style.display = "block";
     document.getElementById("replyText").innerText = msg;
   };
+
+  /* =========================
+     SWIPE TO REPLY (MOBILE)
+  ========================= */
+  div.style.transition = "transform 0.2s";
+
+  div.addEventListener("touchstart", (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+  });
+
+  div.addEventListener("touchmove", (e) => {
+    let moveX = e.changedTouches[0].screenX - touchStartX;
+
+    if (moveX > 0 && moveX < 100) {
+      div.style.transform = `translateX(${moveX}px)`;
+    }
+  });
+
+  div.addEventListener("touchend", (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+
+    if (touchEndX - touchStartX > 80) {
+      replyingTo = msg;
+
+      const replyBox = document.getElementById("replyBox");
+      const replyText = document.getElementById("replyText");
+
+      if (replyBox && replyText) {
+        replyBox.style.display = "block";
+        replyText.innerText = msg;
+      }
+    }
+
+    div.style.transform = "translateX(0px)";
+  });
 
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
@@ -227,26 +261,6 @@ function addMessage(msg, type, avatar, reply = null) {
 function cancelReply() {
   replyingTo = null;
   document.getElementById("replyBox").style.display = "none";
-}
-
-/* =========================
-   LEAVE ROOM
-========================= */
-function leaveRoom() {
-  location.reload();
-}
-
-/* =========================
-   SEARCH ROOMS
-========================= */
-function filterRooms() {
-  const value = document.getElementById("searchRoom").value.toLowerCase();
-  const cards = document.querySelectorAll(".room-card");
-
-  cards.forEach((card) => {
-    const text = card.innerText.toLowerCase();
-    card.style.display = text.includes(value) ? "block" : "none";
-  });
 }
 
 /* =========================
@@ -271,79 +285,6 @@ socket.on("onlineUsers", (users) => {
     `;
 
     div.onclick = () => openDM(user);
-
     box.appendChild(div);
   });
-});
-
-/* =========================
-   PRIVATE CHAT
-========================= */
-let currentDMUser = "";
-
-function openDM(user) {
-  currentDMUser = user;
-  document.getElementById("dmBox").style.display = "block";
-  document.getElementById("dmUser").innerText = user;
-  document.getElementById("dmMessages").innerHTML = "";
-}
-
-function closeDM() {
-  document.getElementById("dmBox").style.display = "none";
-}
-
-function sendDM() {
-  const input = document.getElementById("dmInput");
-  const msg = input.value.trim();
-  if (!msg) return;
-
-  socket.emit("privateMessage", {
-    to: currentDMUser,
-    text: msg,
-    from: username,
-  });
-
-  addDMMessage("You: " + msg);
-  input.value = "";
-}
-
-function addDMMessage(msg) {
-  const div = document.createElement("div");
-  div.innerText = msg;
-  document.getElementById("dmMessages").appendChild(div);
-}
-
-socket.on("privateMessage", ({ text, from }) => {
-  openDM(from);
-  addDMMessage(from + ": " + text);
-});
-
-/* =========================
-   TYPING UI
-========================= */
-socket.on("typing", (user) => {
-  const box = document.getElementById("typingStatus");
-  if (!box) return;
-
-  box.innerText = user + " is typing...";
-});
-
-socket.on("stopTyping", () => {
-  const box = document.getElementById("typingStatus");
-  if (!box) return;
-
-  box.innerText = "";
-});
-
-/* =========================
-   REACTIONS
-========================= */
-socket.on("messageReaction", ({ id, emoji }) => {
-  const msg = document.querySelector(`[data-id='${id}']`);
-  if (!msg) return;
-
-  const reactBox = msg.querySelector(".reactions");
-  if (!reactBox) return;
-
-  reactBox.innerText += " " + emoji;
 });
