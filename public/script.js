@@ -167,7 +167,7 @@ socket.on("message", (data) => {
 });
 
 /* =========================
-   ADD MESSAGE UI (FINAL + SWIPE)
+   ADD MESSAGE UI
 ========================= */
 function addMessage(msg, type, avatar, reply = null) {
   const div = document.createElement("div");
@@ -190,13 +190,16 @@ function addMessage(msg, type, avatar, reply = null) {
     ${type === "other" ? img : ""}
     <div>
       ${replyHTML}
-      <span>${msg}</span>
+      ${
+        msg.startsWith("blob:")
+          ? `<audio controls src="${msg}"></audio>`
+          : `<span>${msg}</span>`
+      }
       <div class="reactions"></div>
     </div>
     ${type === "you" ? img : ""}
   `;
 
-  /* CLICK = REACT */
   div.onclick = () => {
     const emoji = prompt("React 👍 ❤️ 😂 😡");
     if (!emoji) return;
@@ -207,7 +210,6 @@ function addMessage(msg, type, avatar, reply = null) {
     });
   };
 
-  /* RIGHT CLICK = REPLY */
   div.oncontextmenu = (e) => {
     e.preventDefault();
     replyingTo = msg;
@@ -216,9 +218,6 @@ function addMessage(msg, type, avatar, reply = null) {
     document.getElementById("replyText").innerText = msg;
   };
 
-  /* =========================
-     SWIPE TO REPLY (MOBILE)
-  ========================= */
   div.style.transition = "transform 0.2s";
 
   div.addEventListener("touchstart", (e) => {
@@ -288,3 +287,78 @@ socket.on("onlineUsers", (users) => {
     box.appendChild(div);
   });
 });
+
+/* =========================
+   ✅ TYPING DOTS UI (ADDED HERE)
+========================= */
+socket.on("typing", (user) => {
+  const box = document.getElementById("typingStatus");
+  if (!box) return;
+
+  box.innerHTML = `
+    <div class="typing">
+      <span></span><span></span><span></span>
+    </div>
+  `;
+});
+
+socket.on("stopTyping", () => {
+  const box = document.getElementById("typingStatus");
+  if (!box) return;
+
+  box.innerHTML = "";
+});
+
+/* =========================
+   VOICE MESSAGE
+========================= */
+let mediaRecorder;
+let audioChunks = [];
+
+const recordBtn = document.getElementById("recordBtn");
+
+recordBtn.addEventListener("mousedown", startRecording);
+recordBtn.addEventListener("mouseup", stopRecording);
+
+// Mobile support
+recordBtn.addEventListener("touchstart", startRecording);
+recordBtn.addEventListener("touchend", stopRecording);
+
+async function startRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+
+    mediaRecorder.ondataavailable = (e) => {
+      audioChunks.push(e.data);
+    };
+
+    mediaRecorder.start();
+
+    recordBtn.innerText = "🔴 Recording...";
+  } catch (err) {
+    alert("Mic permission denied");
+  }
+}
+
+function stopRecording() {
+  if (!mediaRecorder) return;
+
+  mediaRecorder.stop();
+
+  mediaRecorder.onstop = () => {
+    const blob = new Blob(audioChunks, { type: "audio/webm" });
+    const audioURL = URL.createObjectURL(blob);
+
+    // send as message
+    socket.emit("chatMessage", {
+      text: audioURL,
+      user: username,
+      audio: true,
+    });
+
+    recordBtn.innerText = "🎤";
+  };
+}
