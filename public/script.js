@@ -6,6 +6,7 @@ const socket = io();
 const roomCards = document.getElementById("roomCards");
 const chatBox = document.getElementById("chatBox");
 const input = document.getElementById("messageInput");
+const recordBtn = document.getElementById("recordBtn");
 
 let typingTimeout;
 
@@ -114,27 +115,6 @@ function enterRoom() {
 }
 
 /* =========================
-   RANDOM ROOM
-========================= */
-function joinRandom() {
-  const cards = document.querySelectorAll(".room-card");
-  if (cards.length === 0) return;
-
-  const random = cards[Math.floor(Math.random() * cards.length)];
-  random.click();
-}
-
-/* =========================
-   CREATE ROOM
-========================= */
-function createRoom() {
-  const room = prompt("Enter room name:");
-  if (!room) return;
-
-  socket.emit("createRoom", { room, max: 10 });
-}
-
-/* =========================
    CHAT
 ========================= */
 function sendMessage() {
@@ -200,16 +180,15 @@ function addMessage(msg, type, avatar, reply = null) {
     ${type === "you" ? img : ""}
   `;
 
+  /* REACT */
   div.onclick = () => {
     const emoji = prompt("React 👍 ❤️ 😂 😡");
     if (!emoji) return;
 
-    socket.emit("reactMessage", {
-      id: messageId,
-      emoji,
-    });
+    socket.emit("reactMessage", { id: messageId, emoji });
   };
 
+  /* RIGHT CLICK REPLY */
   div.oncontextmenu = (e) => {
     e.preventDefault();
     replyingTo = msg;
@@ -218,6 +197,7 @@ function addMessage(msg, type, avatar, reply = null) {
     document.getElementById("replyText").innerText = msg;
   };
 
+  /* SWIPE REPLY */
   div.style.transition = "transform 0.2s";
 
   div.addEventListener("touchstart", (e) => {
@@ -226,7 +206,6 @@ function addMessage(msg, type, avatar, reply = null) {
 
   div.addEventListener("touchmove", (e) => {
     let moveX = e.changedTouches[0].screenX - touchStartX;
-
     if (moveX > 0 && moveX < 100) {
       div.style.transform = `translateX(${moveX}px)`;
     }
@@ -237,14 +216,8 @@ function addMessage(msg, type, avatar, reply = null) {
 
     if (touchEndX - touchStartX > 80) {
       replyingTo = msg;
-
-      const replyBox = document.getElementById("replyBox");
-      const replyText = document.getElementById("replyText");
-
-      if (replyBox && replyText) {
-        replyBox.style.display = "block";
-        replyText.innerText = msg;
-      }
+      document.getElementById("replyBox").style.display = "block";
+      document.getElementById("replyText").innerText = msg;
     }
 
     div.style.transform = "translateX(0px)";
@@ -255,43 +228,9 @@ function addMessage(msg, type, avatar, reply = null) {
 }
 
 /* =========================
-   CANCEL REPLY
+   TYPING DOTS
 ========================= */
-function cancelReply() {
-  replyingTo = null;
-  document.getElementById("replyBox").style.display = "none";
-}
-
-/* =========================
-   ONLINE USERS
-========================= */
-socket.on("onlineUsers", (users) => {
-  const box = document.getElementById("onlineUsers");
-  if (!box) return;
-
-  box.innerHTML = "";
-
-  users.forEach((user) => {
-    const div = document.createElement("div");
-    div.className = "online-user";
-
-    div.innerHTML = `
-      <div style="position:relative;">
-        <img src="https://i.imgur.com/6VBx3io.png">
-        <span class="online-dot"></span>
-      </div>
-      <span>${user}</span>
-    `;
-
-    div.onclick = () => openDM(user);
-    box.appendChild(div);
-  });
-});
-
-/* =========================
-   ✅ TYPING DOTS UI (ADDED HERE)
-========================= */
-socket.on("typing", (user) => {
+socket.on("typing", () => {
   const box = document.getElementById("typingStatus");
   if (!box) return;
 
@@ -310,86 +249,24 @@ socket.on("stopTyping", () => {
 });
 
 /* =========================
-   VOICE MESSAGE
+   VOICE (FINAL FIXED)
 ========================= */
-let mediaRecorder;
-let audioChunks = [];
-
-const recordBtn = document.getElementById("recordBtn");
-
-recordBtn.addEventListener("mousedown", startRecording);
-recordBtn.addEventListener("mouseup", stopRecording);
-
-// Mobile support
-recordBtn.addEventListener("touchstart", startRecording);
-recordBtn.addEventListener("touchend", stopRecording);
-
-async function startRecording() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = [];
-
-    mediaRecorder.ondataavailable = (e) => {
-      audioChunks.push(e.data);
-    };
-
-    mediaRecorder.start();
-
-    recordBtn.innerText = "🔴 Recording...";
-  } catch (err) {
-    alert("Mic permission denied");
-  }
-}
-
-function stopRecording() {
-  if (!mediaRecorder) return;
-
-  mediaRecorder.stop();
-
-  mediaRecorder.onstop = () => {
-    const blob = new Blob(audioChunks, { type: "audio/webm" });
-    const audioURL = URL.createObjectURL(blob);
-
-    // send as message
-    socket.emit("chatMessage", {
-      text: audioURL,
-      user: username,
-      audio: true,
-    });
-
-    recordBtn.innerText = "🎤";
-  };
-}
-
-/* =========================
-   WHATSAPP STYLE VOICE RECORD
-========================= */
-
 let mediaRecorder;
 let audioChunks = [];
 let isRecording = false;
 let startX = 0;
 
-const recordBtn = document.getElementById("recordBtn");
-
 if (recordBtn) {
-
-  // HOLD START
   recordBtn.addEventListener("mousedown", startRecording);
   recordBtn.addEventListener("touchstart", startRecording);
 
-  // MOVE (SLIDE CANCEL)
   recordBtn.addEventListener("mousemove", handleMove);
   recordBtn.addEventListener("touchmove", handleMove);
 
-  // RELEASE
   recordBtn.addEventListener("mouseup", stopRecording);
   recordBtn.addEventListener("touchend", stopRecording);
 }
 
-/* START RECORD */
 async function startRecording(e) {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -398,303 +275,54 @@ async function startRecording(e) {
     audioChunks = [];
     isRecording = true;
 
-    startX = e.type.includes("mouse")
-      ? e.clientX
-      : e.touches[0].clientX;
+    startX = e.type.includes("mouse") ? e.clientX : e.touches[0].clientX;
 
     mediaRecorder.ondataavailable = (e) => {
       audioChunks.push(e.data);
     };
 
     mediaRecorder.onstop = () => {
-      if (!isRecording) return; // cancelled
+      if (!isRecording) return;
 
       const blob = new Blob(audioChunks, { type: "audio/webm" });
       const url = URL.createObjectURL(blob);
 
-      addVoiceMessage(url);
+      socket.emit("chatMessage", {
+        text: url,
+        user: username,
+        reply: null,
+      });
     };
 
     mediaRecorder.start();
-
-    // UI feedback
     recordBtn.innerText = "🎙️ Slide to cancel";
-    recordBtn.style.background = "#ff4d4d";
-
-  } catch (err) {
-    alert("Microphone permission denied");
+  } catch {
+    alert("Mic permission denied");
   }
 }
 
-/* HANDLE SLIDE */
 function handleMove(e) {
   if (!mediaRecorder || mediaRecorder.state !== "recording") return;
 
-  const currentX = e.type.includes("mouse")
-    ? e.clientX
-    : e.touches[0].clientX;
+  const currentX = e.type.includes("mouse") ? e.clientX : e.touches[0].clientX;
 
-  const diff = startX - currentX;
-
-  // 👉 SLIDE LEFT TO CANCEL
-  if (diff > 80) {
+  if (startX - currentX > 80) {
     cancelRecording();
   }
 }
 
-/* STOP (SEND) */
 function stopRecording() {
   if (!mediaRecorder || mediaRecorder.state === "inactive") return;
 
-  mediaRecorder.stop();
   isRecording = true;
-
-  resetButton();
+  mediaRecorder.stop();
+  recordBtn.innerText = "🎤";
 }
 
-/* CANCEL */
 function cancelRecording() {
   if (!mediaRecorder) return;
 
   isRecording = false;
   mediaRecorder.stop();
-
-  resetButton();
-
-  // Optional feedback
-  alert("Recording cancelled");
-}
-
-/* RESET BUTTON UI */
-function resetButton() {
-  recordBtn.innerText = "🎤";
-  recordBtn.style.background = "";
-}
-
-/* SHOW VOICE MESSAGE */
-function addVoiceMessage(audioURL) {
-  const div = document.createElement("div");
-  div.className = "message you";
-
-  div.innerHTML = `
-    <div>
-      🎤 <audio controls src="${audioURL}"></audio>
-    </div>
-  `;
-
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-/* =========================
-   VOICE (SAFE ADD-ON)
-========================= */
-
-let mediaRecorder;
-let audioChunks = [];
-let isRecording = false;
-let recordStartX = 0;
-
-const recordBtn = document.getElementById("recordBtn");
-
-if (recordBtn) {
-
-  // HOLD START
-  recordBtn.addEventListener("mousedown", startVoice);
-  recordBtn.addEventListener("touchstart", startVoice);
-
-  // MOVE (SLIDE CANCEL)
-  recordBtn.addEventListener("mousemove", moveVoice);
-  recordBtn.addEventListener("touchmove", moveVoice);
-
-  // RELEASE
-  recordBtn.addEventListener("mouseup", stopVoice);
-  recordBtn.addEventListener("touchend", stopVoice);
-}
-
-/* START */
-async function startVoice(e) {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = [];
-    isRecording = true;
-
-    recordStartX = e.type.includes("mouse")
-      ? e.clientX
-      : e.touches[0].clientX;
-
-    mediaRecorder.ondataavailable = (e) => {
-      audioChunks.push(e.data);
-    };
-
-    mediaRecorder.onstop = () => {
-      if (!isRecording) return; // cancelled
-
-      const blob = new Blob(audioChunks, { type: "audio/webm" });
-      const url = URL.createObjectURL(blob);
-
-      addVoiceBubble(url);
-    };
-
-    mediaRecorder.start();
-
-    // UI feedback only (no layout change)
-    recordBtn.innerText = "🔴";
-
-  } catch {
-    alert("Mic permission needed");
-  }
-}
-
-/* MOVE (SLIDE LEFT TO CANCEL) */
-function moveVoice(e) {
-  if (!mediaRecorder || mediaRecorder.state !== "recording") return;
-
-  const currentX = e.type.includes("mouse")
-    ? e.clientX
-    : e.touches[0].clientX;
-
-  if (recordStartX - currentX > 80) {
-    cancelVoice();
-  }
-}
-
-/* STOP = SEND */
-function stopVoice() {
-  if (!mediaRecorder || mediaRecorder.state === "inactive") return;
-
-  isRecording = true;
-  mediaRecorder.stop();
-
   recordBtn.innerText = "🎤";
 }
-
-/* CANCEL */
-function cancelVoice() {
-  if (!mediaRecorder) return;
-
-  isRecording = false;
-  mediaRecorder.stop();
-
-  recordBtn.innerText = "🎤";
-}
-
-/* SHOW VOICE MESSAGE (uses your UI safely) */
-function addVoiceBubble(url) {
-  const div = document.createElement("div");
-  div.className = "message you";
-
-  div.innerHTML = `
-    <div>
-      <audio controls src="${url}"></audio>
-    </div>
-  `;
-
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-document.addEventListener("DOMContentLoaded", () => {
-  let mediaRecorder;
-  let audioChunks = [];
-  let isRecording = false;
-  let recordStartX = 0;
-
-  const recordBtn = document.getElementById("recordBtn");
-
-  if (!recordBtn) {
-    console.log("❌ recordBtn not found");
-    return;
-  }
-
-  console.log("✅ recordBtn found");
-
-  recordBtn.addEventListener("mousedown", startVoice);
-  recordBtn.addEventListener("touchstart", startVoice);
-
-  recordBtn.addEventListener("mousemove", moveVoice);
-  recordBtn.addEventListener("touchmove", moveVoice);
-
-  recordBtn.addEventListener("mouseup", stopVoice);
-  recordBtn.addEventListener("touchend", stopVoice);
-
-  async function startVoice(e) {
-    console.log("🎤 start");
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      mediaRecorder = new MediaRecorder(stream);
-      audioChunks = [];
-      isRecording = true;
-
-      recordStartX = e.type.includes("mouse")
-        ? e.clientX
-        : e.touches[0].clientX;
-
-      mediaRecorder.ondataavailable = (e) => {
-        audioChunks.push(e.data);
-      };
-
-      mediaRecorder.onstop = () => {
-        if (!isRecording) return;
-
-        const blob = new Blob(audioChunks, { type: "audio/webm" });
-        const url = URL.createObjectURL(blob);
-
-        addVoiceBubble(url);
-      };
-
-      mediaRecorder.start();
-      recordBtn.innerText = "🔴";
-    } catch (err) {
-      console.error(err);
-      alert("Mic permission denied or not supported");
-    }
-  }
-
-  function moveVoice(e) {
-    if (!mediaRecorder || mediaRecorder.state !== "recording") return;
-
-    const currentX = e.type.includes("mouse")
-      ? e.clientX
-      : e.touches[0].clientX;
-
-    if (recordStartX - currentX > 80) {
-      cancelVoice();
-    }
-  }
-
-  function stopVoice() {
-    if (!mediaRecorder || mediaRecorder.state === "inactive") return;
-
-    isRecording = true;
-    mediaRecorder.stop();
-    recordBtn.innerText = "🎤";
-  }
-
-  function cancelVoice() {
-    if (!mediaRecorder) return;
-
-    isRecording = false;
-    mediaRecorder.stop();
-    recordBtn.innerText = "🎤";
-  }
-
-  function addVoiceBubble(url) {
-    const chatBox = document.getElementById("chatBox");
-
-    const div = document.createElement("div");
-    div.className = "message you";
-
-    div.innerHTML = `
-      <div>
-        <audio controls src="${url}"></audio>
-      </div>
-    `;
-
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
-});
