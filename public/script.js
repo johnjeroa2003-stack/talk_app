@@ -362,3 +362,126 @@ function stopRecording() {
     recordBtn.innerText = "🎤";
   };
 }
+
+/* =========================
+   WHATSAPP STYLE VOICE RECORD
+========================= */
+
+let mediaRecorder;
+let audioChunks = [];
+let isRecording = false;
+let startX = 0;
+
+const recordBtn = document.getElementById("recordBtn");
+
+if (recordBtn) {
+
+  // HOLD START
+  recordBtn.addEventListener("mousedown", startRecording);
+  recordBtn.addEventListener("touchstart", startRecording);
+
+  // MOVE (SLIDE CANCEL)
+  recordBtn.addEventListener("mousemove", handleMove);
+  recordBtn.addEventListener("touchmove", handleMove);
+
+  // RELEASE
+  recordBtn.addEventListener("mouseup", stopRecording);
+  recordBtn.addEventListener("touchend", stopRecording);
+}
+
+/* START RECORD */
+async function startRecording(e) {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    isRecording = true;
+
+    startX = e.type.includes("mouse")
+      ? e.clientX
+      : e.touches[0].clientX;
+
+    mediaRecorder.ondataavailable = (e) => {
+      audioChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      if (!isRecording) return; // cancelled
+
+      const blob = new Blob(audioChunks, { type: "audio/webm" });
+      const url = URL.createObjectURL(blob);
+
+      addVoiceMessage(url);
+    };
+
+    mediaRecorder.start();
+
+    // UI feedback
+    recordBtn.innerText = "🎙️ Slide to cancel";
+    recordBtn.style.background = "#ff4d4d";
+
+  } catch (err) {
+    alert("Microphone permission denied");
+  }
+}
+
+/* HANDLE SLIDE */
+function handleMove(e) {
+  if (!mediaRecorder || mediaRecorder.state !== "recording") return;
+
+  const currentX = e.type.includes("mouse")
+    ? e.clientX
+    : e.touches[0].clientX;
+
+  const diff = startX - currentX;
+
+  // 👉 SLIDE LEFT TO CANCEL
+  if (diff > 80) {
+    cancelRecording();
+  }
+}
+
+/* STOP (SEND) */
+function stopRecording() {
+  if (!mediaRecorder || mediaRecorder.state === "inactive") return;
+
+  mediaRecorder.stop();
+  isRecording = true;
+
+  resetButton();
+}
+
+/* CANCEL */
+function cancelRecording() {
+  if (!mediaRecorder) return;
+
+  isRecording = false;
+  mediaRecorder.stop();
+
+  resetButton();
+
+  // Optional feedback
+  alert("Recording cancelled");
+}
+
+/* RESET BUTTON UI */
+function resetButton() {
+  recordBtn.innerText = "🎤";
+  recordBtn.style.background = "";
+}
+
+/* SHOW VOICE MESSAGE */
+function addVoiceMessage(audioURL) {
+  const div = document.createElement("div");
+  div.className = "message you";
+
+  div.innerHTML = `
+    <div>
+      🎤 <audio controls src="${audioURL}"></audio>
+    </div>
+  `;
+
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
