@@ -304,3 +304,31 @@ socket.on("stopTyping", () => {
 
   box.innerHTML = "";
 });
+
+/* =========================
+   LOGIN SYSTEM (SIMPLE)
+========================= */
+
+function loginUser() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass = document.getElementById("loginPassword").value.trim();
+
+  if (!email || !pass) {
+    alert("Enter email & password");
+    return;
+  }
+
+  // Fake login (store locally)
+  localStorage.setItem("chatUser", email);
+
+  document.getElementById("loginScreen").style.display = "none";
+}
+
+/* AUTO LOGIN */
+window.onload = () => {
+  const user = localStorage.getItem("chatUser");
+
+  if (user) {
+    document.getElementById("loginScreen").style.display = "none";
+  }
+};
