@@ -1,25 +1,15 @@
 const socket = io();
 
-/* =========================
-   ELEMENTS
-========================= */
 const roomCards = document.getElementById("roomCards");
 const chatBox = document.getElementById("chatBox");
 const input = document.getElementById("messageInput");
 
-let username = "User" + Math.floor(Math.random() * 1000);
+let username = "";
 let currentRoom = "";
+let userProfile = {};
+let messages = {};
 
-let tempRoom = "";
-let userProfile = {
-  name: "",
-  gender: "",
-  avatar: "",
-};
-
-/* =========================
-   LOAD ROOMS
-========================= */
+/* ROOMS */
 socket.emit("getRooms");
 
 socket.on("roomsList", (rooms) => {
@@ -28,99 +18,28 @@ socket.on("roomsList", (rooms) => {
   for (let room in rooms) {
     const div = document.createElement("div");
     div.className = "room-card";
-
-    div.innerHTML = `
-      <h3>${room}</h3>
-      <p>${rooms[room].users}/${rooms[room].max}</p>
-    `;
-
+    div.innerHTML = `<h3>${room}</h3><p>${rooms[room].users}</p>`;
     div.onclick = () => joinRoom(room);
-
     roomCards.appendChild(div);
   }
 });
 
-/* =========================
-   JOIN ROOM (UPDATED ONLY THIS)
-========================= */
+/* JOIN */
 function joinRoom(room) {
-  tempRoom = room;
+  const name = prompt("Enter name:");
+  if (!name) return;
 
-  document.getElementById("userPopup").style.display = "flex";
-}
+  username = name;
+  currentRoom = room;
 
-/* =========================
-   CONFIRM USER (NEW)
-========================= */
-function confirmUser() {
-  const name = document.getElementById("nameInput").value.trim();
-  const gender = document.getElementById("genderInput").value;
-  const file = document.getElementById("avatarInput").files[0];
-
-  if (!name || !gender) {
-    alert("Fill all fields");
-    return;
-  }
-
-  userProfile.name = name;
-  userProfile.gender = gender;
-
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      userProfile.avatar = e.target.result;
-      enterRoom();
-    };
-    reader.readAsDataURL(file);
-  } else {
-    enterRoom();
-  }
-}
-
-/* =========================
-   ENTER ROOM (NEW)
-========================= */
-function enterRoom() {
-  document.getElementById("userPopup").style.display = "none";
-
-  username = userProfile.name;
-  currentRoom = tempRoom;
-
-  socket.emit("joinRoom", {
-    username: userProfile.name,
-    room: tempRoom,
-  });
+  socket.emit("joinRoom", { username, room });
 
   document.getElementById("lobby").style.display = "none";
   document.getElementById("chatApp").style.display = "flex";
-
-  document.getElementById("roomName").innerText = tempRoom;
+  document.getElementById("roomName").innerText = room;
 }
 
-/* =========================
-   RANDOM ROOM
-========================= */
-function joinRandom() {
-  const cards = document.querySelectorAll(".room-card");
-  if (cards.length === 0) return;
-
-  const random = cards[Math.floor(Math.random() * cards.length)];
-  random.click();
-}
-
-/* =========================
-   CREATE ROOM
-========================= */
-function createRoom() {
-  const room = prompt("Enter room name:");
-  if (!room) return;
-
-  socket.emit("createRoom", { room, max: 10 });
-}
-
-/* =========================
-   CHAT
-========================= */
+/* SEND */
 function sendMessage() {
   const msg = input.value.trim();
   if (!msg) return;
@@ -128,61 +47,64 @@ function sendMessage() {
   socket.emit("chatMessage", {
     text: msg,
     user: username,
+    avatar: userProfile.avatar || "",
   });
 
   input.value = "";
 }
 
+/* RECEIVE */
 socket.on("message", (data) => {
-  if (data.user === "system") {
-    addMessage(data.text, "other", "");
-    return;
-  }
+  messages[data.id] = data;
 
   if (data.user === username) {
-    addMessage("You: " + data.text, "you", data.avatar);
+    addMessage(data, "you");
   } else {
-    addMessage(data.user + ": " + data.text, "other", data.avatar);
+    addMessage(data, "other");
+    socket.emit("messageSeen", data.id);
   }
 });
-/* =========================
-   ADD MESSAGE UI
-========================= */
-function addMessage(msg, type, avatar) {
+
+/* STATUS */
+socket.on("messageStatus", ({ id, seen }) => {
+  const el = document.getElementById("status-" + id);
+  if (el) el.innerText = seen > 1 ? "✔✔ Seen" : "✔ Delivered";
+});
+
+/* DELETE */
+socket.on("deleteMessage", (id) => {
+  const el = document.getElementById("msg-" + id);
+  if (el) el.remove();
+});
+
+/* UI */
+function addMessage(data, type) {
   const div = document.createElement("div");
   div.className = "message " + type;
+  div.id = "msg-" + data.id;
 
-  const img =
-    avatar && avatar !== ""
-      ? `<img src="${avatar}" class="avatar">`
-      : `<img src="https://i.imgur.com/6VBx3io.png" class="avatar">`;
+  const avatar = data.avatar || "https://i.imgur.com/6VBx3io.png";
 
   div.innerHTML = `
-    ${type === "other" ? img : ""}
-    <span>${msg}</span>
-    ${type === "you" ? img : ""}
+    ${type === "other" ? `<img src="${avatar}" class="avatar">` : ""}
+    <div>
+      <span>${data.user}: ${data.text}</span>
+      <div id="status-${data.id}" class="status">✔</div>
+    </div>
+    ${type === "you" ? `<img src="${avatar}" class="avatar">` : ""}
   `;
+
+  div.ondblclick = () => {
+    if (type === "you") {
+      socket.emit("deleteMessage", data.id);
+    }
+  };
 
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-/* =========================
-   LEAVE ROOM
-========================= */
+/* LEAVE */
 function leaveRoom() {
   location.reload();
-}
-
-/* =========================
-   SEARCH ROOMS
-========================= */
-function filterRooms() {
-  const value = document.getElementById("searchRoom").value.toLowerCase();
-  const cards = document.querySelectorAll(".room-card");
-
-  cards.forEach((card) => {
-    const text = card.innerText.toLowerCase();
-    card.style.display = text.includes(value) ? "block" : "none";
-  });
 }
