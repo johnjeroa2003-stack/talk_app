@@ -388,3 +388,79 @@ body {
 .typing {
   opacity: 0.7;
 }
+
+/* =========================
+   FLOATING MESSAGE ANIMATION
+========================= */
+
+/* Base animation */
+@keyframes floatIn {
+  0% {
+    transform: translateY(20px) scale(0.95);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(-4px) scale(1.02);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0px) scale(1);
+  }
+}
+
+/* Apply to messages */
+.message {
+  animation: floatIn 0.3s ease;
+}
+
+/* Slight hover lift (desktop) */
+.message:hover {
+  transform: translateY(-2px);
+  transition: 0.2s;
+}
+
+/* Smooth bubble feel */
+.message div {
+  transition: all 0.2s ease;
+}
+
+/* Your message = slide from right */
+.message.you {
+  animation: floatRight 0.3s ease;
+}
+
+@keyframes floatRight {
+  0% {
+    transform: translateX(40px) scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0px) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Other messages = slide from left */
+.message.other {
+  animation: floatLeft 0.3s ease;
+}
+
+@keyframes floatLeft {
+  0% {
+    transform: translateX(-40px) scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0px) scale(1);
+    opacity: 1;
+  }
+}
+
+.message div {
+  animation: subtleFloat 3s ease-in-out infinite;
+}
+
+@keyframes subtleFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-2px); }
+}
