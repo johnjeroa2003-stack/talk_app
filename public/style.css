@@ -327,3 +327,28 @@ body::before {
     opacity: 1;
   }
 }
+
+/* MOBILE FIX */
+.chat-app {
+  height: 100dvh;
+}
+
+.chat-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.chat-input {
+  position: sticky;
+  bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .chat-body {
+    height: calc(100dvh - 160px);
+  }
+
+  .chat-input input {
+    font-size: 16px;
+  }
+}

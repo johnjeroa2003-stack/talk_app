@@ -1,20 +1,17 @@
 document.addEventListener("DOMContentLoaded", () => {
   const socket = io();
 
-  /* =========================
-   ELEMENTS
-========================= */
+  /* ELEMENTS */
   const roomCards = document.getElementById("roomCards");
   const chatBox = document.getElementById("chatBox");
   const input = document.getElementById("messageInput");
   const recordBtn = document.getElementById("recordBtn");
 
   let typingTimeout;
-
   let username = "User" + Math.floor(Math.random() * 1000);
   let currentRoom = "";
-
   let tempRoom = "";
+
   let userProfile = {
     name: "",
     gender: "",
@@ -22,8 +19,15 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   let replyingTo = null;
-  let touchStartX = 0;
-  let touchEndX = 0;
+
+  /* =========================
+   ENTER KEY SEND (FIXED)
+========================= */
+  input.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      sendMessage();
+    }
+  });
 
   /* =========================
    LOAD ROOMS
@@ -58,13 +62,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* =========================
-   CREATE ROOM (FIXED)
+   CREATE ROOM (MOBILE SAFE)
 ========================= */
   window.createRoom = function () {
-    const room = prompt("Enter room name:");
-    if (!room) return;
+    let room = prompt("Enter room name:");
 
-    socket.emit("createRoom", { room, max: 10 });
+    if (!room || room.trim() === "") return;
+
+    socket.emit("createRoom", { room: room.trim(), max: 10 });
 
     setTimeout(() => {
       socket.emit("getRooms");
@@ -77,7 +82,6 @@ document.addEventListener("DOMContentLoaded", () => {
   window.confirmUser = function () {
     const name = document.getElementById("nameInput").value.trim();
     const gender = document.getElementById("genderInput").value;
-    const file = document.getElementById("avatarInput").files[0];
 
     if (!name || !gender) {
       alert("Fill all fields");
@@ -87,16 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
     userProfile.name = name;
     userProfile.gender = gender;
 
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        userProfile.avatar = e.target.result;
-        enterRoom();
-      };
-      reader.readAsDataURL(file);
-    } else {
-      enterRoom();
-    }
+    enterRoom();
   };
 
   /* =========================
@@ -110,14 +105,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     socket.emit("joinRoom", {
       username,
-      room: tempRoom,
+      room: currentRoom,
     });
 
     document.getElementById("lobby").style.display = "none";
     document.getElementById("chatApp").style.display = "flex";
 
-    document.getElementById("roomName").innerText = tempRoom;
+    document.getElementById("roomName").innerText = currentRoom;
   }
+
+  /* =========================
+   EXIT BUTTON (FIXED)
+========================= */
+  window.leaveRoom = function () {
+    location.reload(); // simplest safe reset
+  };
 
   /* =========================
    RANDOM ROOM
@@ -126,8 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const cards = document.querySelectorAll(".room-card");
     if (cards.length === 0) return;
 
-    const random = cards[Math.floor(Math.random() * cards.length)];
-    random.click();
+    cards[Math.floor(Math.random() * cards.length)].click();
   };
 
   /* =========================
@@ -143,8 +144,6 @@ document.addEventListener("DOMContentLoaded", () => {
       reply: replyingTo,
     });
 
-    replyingTo = null;
-    document.getElementById("replyBox").style.display = "none";
     input.value = "";
   };
 
@@ -152,37 +151,21 @@ document.addEventListener("DOMContentLoaded", () => {
    RECEIVE MESSAGE
 ========================= */
   socket.on("message", (data) => {
-    if (data.user === username) {
-      addMessage("You: " + data.text, "you", data.avatar, data.reply);
-    } else {
-      addMessage(
-        data.user + ": " + data.text,
-        "other",
-        data.avatar,
-        data.reply,
-      );
-    }
+    addMessage(
+      data.user === username
+        ? "You: " + data.text
+        : data.user + ": " + data.text,
+    );
   });
 
   /* =========================
-   MESSAGE UI
+   ADD MESSAGE
 ========================= */
-  function addMessage(msg, type, avatar, reply = null) {
+  function addMessage(msg) {
     const div = document.createElement("div");
-    div.className = "message " + type;
+    div.className = "message";
 
-    const img = avatar
-      ? `<img src="${avatar}" class="avatar">`
-      : `<img src="https://i.imgur.com/6VBx3io.png" class="avatar">`;
-
-    div.innerHTML = `
-    ${type === "other" ? img : ""}
-    <div>
-      ${reply ? `<div style="font-size:12px;">↪ ${reply}</div>` : ""}
-      <span>${msg}</span>
-    </div>
-    ${type === "you" ? img : ""}
-  `;
+    div.innerHTML = `<div>${msg}</div>`;
 
     chatBox.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
@@ -210,79 +193,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* =========================
-   VOICE (CLEAN VERSION)
+   MOBILE FIX (IMPORTANT)
 ========================= */
-  let mediaRecorder;
-  let audioChunks = [];
-  let isRecording = false;
-  let startX = 0;
-
-  if (recordBtn) {
-    recordBtn.addEventListener("mousedown", startRecording);
-    recordBtn.addEventListener("mouseup", stopRecording);
-    recordBtn.addEventListener("mousemove", handleMove);
-
-    recordBtn.addEventListener("touchstart", startRecording);
-    recordBtn.addEventListener("touchend", stopRecording);
-    recordBtn.addEventListener("touchmove", handleMove);
-  }
-
-  async function startRecording(e) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      mediaRecorder = new MediaRecorder(stream);
-      audioChunks = [];
-      isRecording = true;
-
-      startX = e.touches ? e.touches[0].clientX : e.clientX;
-
-      mediaRecorder.ondataavailable = (e) => {
-        audioChunks.push(e.data);
-      };
-
-      mediaRecorder.onstop = () => {
-        if (!isRecording) return;
-
-        const blob = new Blob(audioChunks, { type: "audio/webm" });
-        const url = URL.createObjectURL(blob);
-
-        socket.emit("chatMessage", {
-          text: url,
-          user: username,
-        });
-      };
-
-      mediaRecorder.start();
-      recordBtn.innerText = "🎙️";
-    } catch {
-      alert("Mic permission denied");
-    }
-  }
-
-  function handleMove(e) {
-    if (!mediaRecorder || mediaRecorder.state !== "recording") return;
-
-    const currentX = e.touches ? e.touches[0].clientX : e.clientX;
-
-    if (startX - currentX > 80) {
-      cancelRecording();
-    }
-  }
-
-  function stopRecording() {
-    if (!mediaRecorder) return;
-
-    isRecording = true;
-    mediaRecorder.stop();
-    recordBtn.innerText = "🎤";
-  }
-
-  function cancelRecording() {
-    if (!mediaRecorder) return;
-
-    isRecording = false;
-    mediaRecorder.stop();
-    recordBtn.innerText = "🎤";
-  }
+  window.addEventListener("resize", () => {
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
 });
