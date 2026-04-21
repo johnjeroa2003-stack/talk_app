@@ -67,6 +67,56 @@ function joinRoom(room) {
 }
 
 /* =========================
+   CREATE ROOM (FIXED)
+========================= */
+function createRoom() {
+  document.getElementById("createRoomModal").style.display = "flex";
+}
+
+function closeCreateRoom() {
+  document.getElementById("createRoomModal").style.display = "none";
+}
+
+function confirmCreateRoom() {
+  const room = document.getElementById("newRoomName").value.trim();
+
+  if (!room) {
+    alert("Enter room name");
+    return;
+  }
+
+  socket.emit("createRoom", { room, max: 10 });
+
+  closeCreateRoom();
+
+  function closeCreateRoom() {
+    document.getElementById("createRoomModal").style.display = "none";
+  }
+
+  function confirmCreateRoom() {
+    const room = document.getElementById("newRoomName").value.trim();
+
+    if (!room) {
+      alert("Enter room name");
+      return;
+    }
+
+    socket.emit("createRoom", { room, max: 10 });
+
+    closeCreateRoom();
+
+    // refresh rooms after creation
+    setTimeout(() => {
+      socket.emit("getRooms");
+    }, 300);
+  }
+  // refresh rooms
+  setTimeout(() => {
+    socket.emit("getRooms");
+  }, 300);
+}
+
+/* =========================
    CONFIRM USER
 ========================= */
 function confirmUser() {
@@ -180,7 +230,6 @@ function addMessage(msg, type, avatar, reply = null) {
     ${type === "you" ? img : ""}
   `;
 
-  /* REACT */
   div.onclick = () => {
     const emoji = prompt("React 👍 ❤️ 😂 😡");
     if (!emoji) return;
@@ -188,7 +237,6 @@ function addMessage(msg, type, avatar, reply = null) {
     socket.emit("reactMessage", { id: messageId, emoji });
   };
 
-  /* RIGHT CLICK REPLY */
   div.oncontextmenu = (e) => {
     e.preventDefault();
     replyingTo = msg;
@@ -197,7 +245,6 @@ function addMessage(msg, type, avatar, reply = null) {
     document.getElementById("replyText").innerText = msg;
   };
 
-  /* SWIPE REPLY */
   div.style.transition = "transform 0.2s";
 
   div.addEventListener("touchstart", (e) => {
@@ -249,7 +296,7 @@ socket.on("stopTyping", () => {
 });
 
 /* =========================
-   VOICE (FINAL FIXED)
+   VOICE RECORD
 ========================= */
 let mediaRecorder;
 let audioChunks = [];

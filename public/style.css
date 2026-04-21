@@ -308,3 +308,22 @@ body::before {
   font-size: 12px;
   text-align: center;
 }
+
+#userPopup {
+  backdrop-filter: blur(10px);
+}
+
+#userPopup > div {
+  animation: popIn 0.3s ease;
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
