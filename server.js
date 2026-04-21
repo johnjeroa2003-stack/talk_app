@@ -34,10 +34,12 @@ let usersInRoom = {};
 let userSockets = {}; // for DM
 
 io.on("connection", (socket) => {
+  /* GET ROOMS */
   socket.on("getRooms", () => {
     socket.emit("roomsList", rooms);
   });
 
+  /* CREATE ROOM */
   socket.on("createRoom", ({ room, max }) => {
     if (!rooms[room]) {
       rooms[room] = { users: 0, max: max || 10 };
@@ -45,6 +47,7 @@ io.on("connection", (socket) => {
     }
   });
 
+  /* JOIN ROOM */
   socket.on("joinRoom", ({ username, room }) => {
     if (!rooms[room]) rooms[room] = { users: 0, max: 10 };
 
@@ -75,9 +78,16 @@ io.on("connection", (socket) => {
     });
   });
 
-  /* GROUP CHAT */
-  socket.on("chatMessage", ({ text, user, reply }) => {
-    io.to(socket.room).emit("message", { text, user, reply });
+  /* =========================
+     GROUP CHAT (UPDATED)
+  ========================= */
+  socket.on("chatMessage", (data) => {
+    io.to(socket.room).emit("message", {
+      text: data.text,
+      user: data.user,
+      avatar: data.avatar || "",
+      reply: data.reply || null,
+    });
   });
 
   /* PRIVATE CHAT */
@@ -88,6 +98,7 @@ io.on("connection", (socket) => {
     }
   });
 
+  /* DISCONNECT */
   socket.on("disconnect", () => {
     if (socket.room && rooms[socket.room]) {
       rooms[socket.room].users--;
