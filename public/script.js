@@ -485,3 +485,113 @@ function addVoiceMessage(audioURL) {
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
+
+/* =========================
+   VOICE (SAFE ADD-ON)
+========================= */
+
+let mediaRecorder;
+let audioChunks = [];
+let isRecording = false;
+let recordStartX = 0;
+
+const recordBtn = document.getElementById("recordBtn");
+
+if (recordBtn) {
+
+  // HOLD START
+  recordBtn.addEventListener("mousedown", startVoice);
+  recordBtn.addEventListener("touchstart", startVoice);
+
+  // MOVE (SLIDE CANCEL)
+  recordBtn.addEventListener("mousemove", moveVoice);
+  recordBtn.addEventListener("touchmove", moveVoice);
+
+  // RELEASE
+  recordBtn.addEventListener("mouseup", stopVoice);
+  recordBtn.addEventListener("touchend", stopVoice);
+}
+
+/* START */
+async function startVoice(e) {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    isRecording = true;
+
+    recordStartX = e.type.includes("mouse")
+      ? e.clientX
+      : e.touches[0].clientX;
+
+    mediaRecorder.ondataavailable = (e) => {
+      audioChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      if (!isRecording) return; // cancelled
+
+      const blob = new Blob(audioChunks, { type: "audio/webm" });
+      const url = URL.createObjectURL(blob);
+
+      addVoiceBubble(url);
+    };
+
+    mediaRecorder.start();
+
+    // UI feedback only (no layout change)
+    recordBtn.innerText = "🔴";
+
+  } catch {
+    alert("Mic permission needed");
+  }
+}
+
+/* MOVE (SLIDE LEFT TO CANCEL) */
+function moveVoice(e) {
+  if (!mediaRecorder || mediaRecorder.state !== "recording") return;
+
+  const currentX = e.type.includes("mouse")
+    ? e.clientX
+    : e.touches[0].clientX;
+
+  if (recordStartX - currentX > 80) {
+    cancelVoice();
+  }
+}
+
+/* STOP = SEND */
+function stopVoice() {
+  if (!mediaRecorder || mediaRecorder.state === "inactive") return;
+
+  isRecording = true;
+  mediaRecorder.stop();
+
+  recordBtn.innerText = "🎤";
+}
+
+/* CANCEL */
+function cancelVoice() {
+  if (!mediaRecorder) return;
+
+  isRecording = false;
+  mediaRecorder.stop();
+
+  recordBtn.innerText = "🎤";
+}
+
+/* SHOW VOICE MESSAGE (uses your UI safely) */
+function addVoiceBubble(url) {
+  const div = document.createElement("div");
+  div.className = "message you";
+
+  div.innerHTML = `
+    <div>
+      <audio controls src="${url}"></audio>
+    </div>
+  `;
+
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
