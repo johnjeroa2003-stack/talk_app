@@ -45,27 +45,23 @@ io.on("connection", (socket) => {
      CREATE ROOM (FIXED)
   ========================= */
   socket.on("createRoom", ({ room, max }) => {
-    if (!room) return;
+    console.log("🔥 CREATE ROOM REQUEST:", room);
+
+    if (!room || room.trim() === "") {
+      console.log("❌ Invalid room name");
+      return;
+    }
 
     if (!rooms[room]) {
       rooms[room] = { users: 0, max: max || 10 };
 
-      // send updated rooms to ALL users
-      io.emit("roomsList", rooms);
+      console.log("✅ Room created:", room);
 
-      // confirm to creator
-      socket.emit("message", {
-        user: "system",
-        text: `Room "${room}" created successfully`,
-      });
+      io.emit("roomsList", rooms);
     } else {
-      socket.emit("message", {
-        user: "system",
-        text: "Room already exists",
-      });
+      console.log("⚠️ Room already exists:", room);
     }
   });
-
   /* =========================
      JOIN ROOM (FIXED)
   ========================= */
