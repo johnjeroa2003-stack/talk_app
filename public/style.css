@@ -1,86 +1,65 @@
 /* =========================
-   WHATSAPP UI ADD-ON
-========================= */
-
-/* Chat background */
-body {
-  background: #ece5dd;
-}
-
-/* Header upgrade */
-.chat-header {
-  background: #075e54;
-  color: white;
-}
-
-/* Chat scroll area */
-.chat-body {
-  height: calc(100vh - 140px);
-  overflow-y: auto;
-  padding: 10px;
-}
-
-/* Messages */
-.message {
-  display: flex;
-  margin: 6px 0;
-  max-width: 75%;
-}
-
-.message.you {
-  margin-left: auto;
-}
-
-.message div {
-  background: white;
-  padding: 8px 12px;
-  border-radius: 8px;
-}
-
-/* Your message color */
-.message.you div {
-  background: #ffffff;
-}
-
-/* Avatar */
-.avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-}
-
-/* Input style */
-.chat-input input {
-  border-radius: 20px;
-}
-
-/* Reply box */
-#replyBox {
-  background: #f0f0f0;
-}
-/* =========================
-   GLOBAL
+   GLOBAL BACKGROUND (BLUR IMAGE)
 ========================= */
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: linear-gradient(135deg, #e0c3fc, #f9d5c0);
+
+  background: url("https://images.unsplash.com/photo-1505691938895-1758d7feb511")
+    no-repeat center center/cover;
+
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* DARK BLUR OVERLAY */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  backdrop-filter: blur(12px);
+  background: rgba(0,0,0,0.2);
+  z-index: -1;
+}
+
+/* =========================
+   LOBBY CENTER CARD (GLASS)
+========================= */
+.lobby {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  backdrop-filter: blur(20px);
+}
+
+/* GLASS BOX */
+.lobby::after {
+  content: "";
+  position: absolute;
+  width: 500px;
+  height: 380px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.3);
+  z-index: -1;
 }
 
 /* =========================
    TITLE
 ========================= */
 .title {
-  text-align: center;
-  margin-top: 40px;
-  font-size: clamp(32px, 6vw, 80px);
-  color: #5b3a3a;
+  font-size: 48px;
+  color: #2d2d2d;
+  margin-bottom: 10px;
 }
 
 .subtitle {
-  text-align: center;
-  font-size: 18px;
   color: #555;
+  margin-bottom: 20px;
 }
 
 /* =========================
@@ -88,113 +67,110 @@ body {
 ========================= */
 .buttons {
   display: flex;
-  justify-content: center;
   gap: 15px;
-  margin: 20px;
+  margin-bottom: 20px;
 }
 
 .buttons button {
   padding: 12px 20px;
   border-radius: 10px;
   border: none;
-  background: #e8c9a0;
   cursor: pointer;
+  color: white;
   font-size: 14px;
+}
+
+/* BUTTON COLORS */
+.buttons button:first-child {
+  background: linear-gradient(45deg, #5b6cff, #7c8cff);
+}
+
+.buttons button:last-child {
+  background: linear-gradient(45deg, #22c55e, #16a34a);
 }
 
 /* =========================
    SEARCH
 ========================= */
-.search-box {
-  display: flex;
-  justify-content: center;
-}
-
 .search-box input {
-  padding: 12px;
   width: 300px;
+  padding: 12px;
   border-radius: 10px;
   border: none;
-  font-size: 16px;
+  outline: none;
+  background: rgba(255,255,255,0.8);
 }
 
 /* =========================
-   ROOMS
+   ROOM CARDS
 ========================= */
 .rooms {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 20px;
-  padding: 20px;
-}
-
-.room-card {
-  width: 200px;
-  padding: 30px;
-  border-radius: 20px;
-  background: rgba(255,255,255,0.5);
-  text-align: center;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.room-card:hover {
-  transform: scale(1.05);
+  display: none; /* hide list like your UI */
 }
 
 /* =========================
-   CHAT
+   CHAT APP (GLASS)
 ========================= */
 .chat-app {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  height: 100vh;
+
+  backdrop-filter: blur(20px);
 }
 
+/* HEADER */
 .chat-header {
-  background: #333;
+  background: rgba(0,0,0,0.4);
   color: white;
   padding: 12px;
   display: flex;
   justify-content: space-between;
 }
 
-.chat-box {
+/* ONLINE USERS */
+.online-users {
+  display: flex;
+  gap: 10px;
+  padding: 8px;
+  overflow-x: auto;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(10px);
+}
+
+/* CHAT BODY */
+.chat-body {
   flex: 1;
   overflow-y: auto;
   padding: 10px;
 }
 
 /* =========================
-   MESSAGES
+   MESSAGE BUBBLES (GLASS)
 ========================= */
 .message {
   max-width: 60%;
-  padding: 10px;
   margin: 6px;
-  border-radius: 12px;
-  background: #ddd;
-
-  /* ✅ ADDED FOR AVATAR */
   display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
+.message div {
+  background: rgba(255,255,255,0.6);
+  padding: 10px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+/* YOUR MESSAGE */
 .message.you {
-  background: #6366f1;
-  color: white;
   margin-left: auto;
 }
 
-.message.other {
-  margin-right: auto;
+.message.you div {
+  background: rgba(220,248,198,0.7);
 }
 
-/* =========================
-   AVATAR (NEW)
-========================= */
+/* AVATAR */
 .avatar {
   width: 32px;
   height: 32px;
@@ -207,9 +183,8 @@ body {
 .chat-input {
   display: flex;
   padding: 10px;
-  background: #eee;
-  position: sticky;
-  bottom: 0;
+  background: rgba(255,255,255,0.3);
+  backdrop-filter: blur(10px);
 }
 
 .chat-input input {
@@ -217,287 +192,43 @@ body {
   padding: 10px;
   border-radius: 20px;
   border: none;
-  font-size: 16px;
-}
-
-.chat-input button {
-  margin-left: 8px;
-  padding: 10px;
-}
-
-/* =========================
-   MOBILE UI FIX (IMPORTANT)
-========================= */
-@media (max-width: 768px) {
-
-  .title {
-    font-size: 32px !important;
-    text-align: center;
-  }
-
-  .subtitle {
-    font-size: 16px;
-    text-align: center;
-  }
-
-  .buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 0 20px;
-  }
-
-  .buttons button {
-    width: 100%;
-    padding: 12px;
-    font-size: 14px;
-  }
-
-  .search-box {
-    padding: 0 20px;
-  }
-
-  .search-box input {
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
-  }
-
-  .rooms {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 15px;
-    padding: 20px;
-  }
-
-  .room-card {
-    width: 100%;
-    padding: 20px;
-  }
-}
-
-/* online users container */
-.online-users {
-  display: flex;
-  gap: 10px;
-  padding: 8px;
-  overflow-x: auto;
-  background: #f5f5f5;
-}
-
-/* each user */
-.online-user {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-size: 11px;
-  min-width: 60px;
-}
-
-/* avatar */
-.online-user img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-}
-
-/* green dot */
-.online-dot {
-  width: 10px;
-  height: 10px;
-  background: #22c55e;
-  border-radius: 50%;
-  position: relative;
-  top: -12px;
-  right: -12px;
-  border: 2px solid white;
-}
-
-.reactions {
-  font-size: 14px;
-  margin-top: 4px;
-}
-
-/* =========================
-   GLASS / BLUR UI UPGRADE
-========================= */
-
-/* Background with soft gradient */
-body {
-  background: linear-gradient(135deg, #e0f7f5, #f5f7fa);
-}
-
-/* Chat container glass effect */
-.chat-app {
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* Header glass */
-.chat-header {
-  background: rgba(7, 94, 84, 0.7);
-  backdrop-filter: blur(10px);
-}
-
-/* Chat body */
-.chat-body {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border-radius: 10px;
-}
-
-/* Message bubbles glass */
-.message div {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
-  border-radius: 12px;
-}
-
-/* Your message bubble */
-.message.you div {
-  background: rgba(220, 248, 198, 0.7);
-}
-
-/* Input bar glass */
-.chat-input {
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(10px);
-}
-
-/* Input field */
-.chat-input input {
-  background: rgba(255, 255, 255, 0.6);
-  border: none;
   outline: none;
 }
 
-/* Online users strip */
-.online-users {
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(10px);
-}
-
-/* Reply box glass */
-#replyBox {
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(10px);
-}
-
-/* Typing text softer */
-.typing {
-  opacity: 0.7;
-}
-
 /* =========================
-   FLOATING MESSAGE ANIMATION
+   REPLY BOX
 ========================= */
-
-/* Base animation */
-@keyframes floatIn {
-  0% {
-    transform: translateY(20px) scale(0.95);
-    opacity: 0;
-  }
-  60% {
-    transform: translateY(-4px) scale(1.02);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(0px) scale(1);
-  }
-}
-
-/* Apply to messages */
-.message {
-  animation: floatIn 0.3s ease;
-}
-
-/* Slight hover lift (desktop) */
-.message:hover {
-  transform: translateY(-2px);
-  transition: 0.2s;
-}
-
-/* Smooth bubble feel */
-.message div {
-  transition: all 0.2s ease;
-}
-
-/* Your message = slide from right */
-.message.you {
-  animation: floatRight 0.3s ease;
-}
-
-@keyframes floatRight {
-  0% {
-    transform: translateX(40px) scale(0.95);
-    opacity: 0;
-  }
-  100% {
-    transform: translateX(0px) scale(1);
-    opacity: 1;
-  }
-}
-
-/* Other messages = slide from left */
-.message.other {
-  animation: floatLeft 0.3s ease;
-}
-
-@keyframes floatLeft {
-  0% {
-    transform: translateX(-40px) scale(0.95);
-    opacity: 0;
-  }
-  100% {
-    transform: translateX(0px) scale(1);
-    opacity: 1;
-  }
-}
-
-.message div {
-  animation: subtleFloat 3s ease-in-out infinite;
-}
-
-@keyframes subtleFloat {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-2px); }
+#replyBox {
+  background: rgba(255,255,255,0.4);
+  backdrop-filter: blur(10px);
 }
 
 /* =========================
-   TYPING DOTS (WHATSAPP STYLE)
+   TYPING DOTS
 ========================= */
 .typing {
   display: flex;
   align-items: center;
-  height: 20px;
   padding-left: 10px;
 }
 
 .typing span {
-  height: 6px;
   width: 6px;
+  height: 6px;
   margin: 0 2px;
   background: gray;
   border-radius: 50%;
-  display: inline-block;
   animation: bounce 1.2s infinite;
 }
 
 .typing span:nth-child(2) {
   animation-delay: 0.2s;
 }
-
 .typing span:nth-child(3) {
   animation-delay: 0.4s;
 }
 
 @keyframes bounce {
-  0%, 80%, 100% {
-    transform: scale(0);
-  }
-  40% {
-    transform: scale(1);
-  }
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
 }
