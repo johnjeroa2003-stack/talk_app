@@ -134,20 +134,34 @@ function sendMessage() {
 }
 
 socket.on("message", (data) => {
+  if (data.user === "system") {
+    addMessage(data.text, "other", "");
+    return;
+  }
+
   if (data.user === username) {
-    addMessage("You: " + data.text, "you");
+    addMessage("You: " + data.text, "you", data.avatar);
   } else {
-    addMessage(data.user + ": " + data.text, "other");
+    addMessage(data.user + ": " + data.text, "other", data.avatar);
   }
 });
-
 /* =========================
    ADD MESSAGE UI
 ========================= */
-function addMessage(msg, type) {
+function addMessage(msg, type, avatar) {
   const div = document.createElement("div");
   div.className = "message " + type;
-  div.innerText = msg;
+
+  const img =
+    avatar && avatar !== ""
+      ? `<img src="${avatar}" class="avatar">`
+      : `<img src="https://i.imgur.com/6VBx3io.png" class="avatar">`;
+
+  div.innerHTML = `
+    ${type === "other" ? img : ""}
+    <span>${msg}</span>
+    ${type === "you" ? img : ""}
+  `;
 
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;

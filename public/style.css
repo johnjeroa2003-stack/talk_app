@@ -13,7 +13,7 @@ body {
 .title {
   text-align: center;
   margin-top: 40px;
-  font-size: clamp(32px, 6vw, 80px); /* responsive */
+  font-size: clamp(32px, 6vw, 80px);
   color: #5b3a3a;
 }
 
@@ -106,13 +106,20 @@ body {
   padding: 10px;
 }
 
-/* messages */
+/* =========================
+   MESSAGES
+========================= */
 .message {
   max-width: 60%;
   padding: 10px;
   margin: 6px;
   border-radius: 12px;
   background: #ddd;
+
+  /* ✅ ADDED FOR AVATAR */
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .message.you {
@@ -125,7 +132,18 @@ body {
   margin-right: auto;
 }
 
-/* input */
+/* =========================
+   AVATAR (NEW)
+========================= */
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+/* =========================
+   INPUT
+========================= */
 .chat-input {
   display: flex;
   padding: 10px;
@@ -139,7 +157,7 @@ body {
   padding: 10px;
   border-radius: 20px;
   border: none;
-  font-size: 16px; /* prevent zoom */
+  font-size: 16px;
 }
 
 .chat-input button {
@@ -150,10 +168,8 @@ body {
 /* =========================
    MOBILE UI FIX (IMPORTANT)
 ========================= */
-
 @media (max-width: 768px) {
 
-  /* Fix big title */
   .title {
     font-size: 32px !important;
     text-align: center;
@@ -164,7 +180,6 @@ body {
     text-align: center;
   }
 
-  /* Buttons layout */
   .buttons {
     display: flex;
     flex-direction: column;
@@ -178,7 +193,6 @@ body {
     font-size: 14px;
   }
 
-  /* Search box */
   .search-box {
     padding: 0 20px;
   }
@@ -189,7 +203,6 @@ body {
     font-size: 16px;
   }
 
-  /* Room cards */
   .rooms {
     display: grid;
     grid-template-columns: 1fr;
@@ -201,5 +214,4 @@ body {
     width: 100%;
     padding: 20px;
   }
-
 }
