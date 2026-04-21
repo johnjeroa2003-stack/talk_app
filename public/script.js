@@ -186,3 +186,28 @@ function filterRooms() {
     card.style.display = text.includes(value) ? "block" : "none";
   });
 }
+
+/* =========================
+   ONLINE USERS UI (NEW - ADD ONLY)
+========================= */
+socket.on("onlineUsers", (users) => {
+  const box = document.getElementById("onlineUsers");
+  if (!box) return;
+
+  box.innerHTML = "";
+
+  users.forEach((user) => {
+    const div = document.createElement("div");
+    div.className = "online-user";
+
+    div.innerHTML = `
+      <div style="position:relative;">
+        <img src="https://i.imgur.com/6VBx3io.png">
+        <span class="online-dot"></span>
+      </div>
+      <span>${user}</span>
+    `;
+
+    box.appendChild(div);
+  });
+});
