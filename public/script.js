@@ -332,3 +332,33 @@ window.onload = () => {
     document.getElementById("loginScreen").style.display = "none";
   }
 };
+
+/* =========================
+   LOGIN SYSTEM (SAFE ADD)
+========================= */
+
+function loginUser() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass = document.getElementById("loginPassword").value.trim();
+
+  if (!email || !pass) {
+    alert("Enter email & password");
+    return;
+  }
+
+  // Save login
+  localStorage.setItem("chatUser", email);
+
+  // Hide login screen
+  document.getElementById("loginScreen").style.display = "none";
+}
+
+/* AUTO LOGIN */
+window.addEventListener("load", () => {
+  const user = localStorage.getItem("chatUser");
+
+  if (user) {
+    const login = document.getElementById("loginScreen");
+    if (login) login.style.display = "none";
+  }
+});
