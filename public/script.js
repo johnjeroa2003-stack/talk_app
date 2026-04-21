@@ -167,10 +167,26 @@ function addMessage(msg, type, avatar) {
       : `<img src="https://i.imgur.com/6VBx3io.png" class="avatar">`;
 
   div.innerHTML = `
-    ${type === "other" ? img : ""}
+  ${type === "other" ? img : ""}
+  <div>
     <span>${msg}</span>
-    ${type === "you" ? img : ""}
-  `;
+    <div class="reactions" id="react-${Date.now()}"></div>
+  </div>
+  ${type === "you" ? img : ""}
+`;
+
+const messageId = Date.now();
+div.dataset.id = messageId;
+
+div.onclick = () => {
+  const emoji = prompt("React with emoji 👍 ❤️ 😂 😡");
+  if (!emoji) return;
+
+  socket.emit("reactMessage", {
+    id: messageId,
+    emoji,
+  });
+};
 
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
@@ -282,4 +298,17 @@ socket.on("stopTyping", () => {
   if (!box) return;
 
   box.innerText = "";
+});
+
+/* =========================
+   SHOW REACTIONS
+========================= */
+socket.on("messageReaction", ({ id, emoji }) => {
+  const msg = document.querySelector(`[data-id='${id}']`);
+  if (!msg) return;
+
+  const reactBox = msg.querySelector(".reactions");
+  if (!reactBox) return;
+
+  reactBox.innerText += " " + emoji;
 });

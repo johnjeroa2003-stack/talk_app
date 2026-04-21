@@ -86,7 +86,14 @@ io.on("connection", (socket) => {
   });
 
   /* =========================
-     TYPING INDICATOR (ADDED)
+     MESSAGE REACTIONS (ADDED)
+  ========================= */
+  socket.on("reactMessage", ({ id, emoji }) => {
+    io.to(socket.room).emit("messageReaction", { id, emoji });
+  });
+
+  /* =========================
+     TYPING INDICATOR
   ========================= */
   socket.on("typing", (user) => {
     socket.to(socket.room).emit("typing", user);

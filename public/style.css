@@ -252,3 +252,8 @@ body {
   right: -12px;
   border: 2px solid white;
 }
+
+.reactions {
+  font-size: 14px;
+  margin-top: 4px;
+}
