@@ -47,14 +47,11 @@ io.on("connection", (socket) => {
     }
   });
 
-  /* JOIN ROOM */
+  /* JOIN ROOM (LIMIT REMOVED) */
   socket.on("joinRoom", ({ username, room }) => {
     if (!rooms[room]) rooms[room] = { users: 0, max: 10 };
 
-    if (rooms[room].users >= rooms[room].max) {
-      socket.emit("roomFull");
-      return;
-    }
+    // ❌ ROOM LIMIT REMOVED (ANYONE CAN JOIN)
 
     socket.join(room);
     socket.username = username;
@@ -76,11 +73,12 @@ io.on("connection", (socket) => {
       text: username + " joined",
       user: "system",
     });
+
+    // ✅ (if you added online users earlier, keep this)
+    io.to(room).emit("onlineUsers", usersInRoom[room]);
   });
 
-  /* =========================
-     GROUP CHAT (UPDATED)
-  ========================= */
+  /* GROUP CHAT */
   socket.on("chatMessage", (data) => {
     io.to(socket.room).emit("message", {
       text: data.text,
@@ -109,6 +107,9 @@ io.on("connection", (socket) => {
 
       io.emit("roomsList", rooms);
       io.to(socket.room).emit("roomUsers", usersInRoom[socket.room]);
+
+      // ✅ update online users
+      io.to(socket.room).emit("onlineUsers", usersInRoom[socket.room]);
     }
   });
 });
