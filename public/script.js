@@ -6,16 +6,9 @@ const socket = io();
 const roomCards = document.getElementById("roomCards");
 const chatBox = document.getElementById("chatBox");
 const input = document.getElementById("messageInput");
+
 let typingTimeout;
 
-input.addEventListener("input", () => {
-  socket.emit("typing", username);
-
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    socket.emit("stopTyping");
-  }, 1000);
-});
 let username = "User" + Math.floor(Math.random() * 1000);
 let currentRoom = "";
 
@@ -25,6 +18,18 @@ let userProfile = {
   gender: "",
   avatar: "",
 };
+
+/* =========================
+   TYPING SEND
+========================= */
+input.addEventListener("input", () => {
+  socket.emit("typing", username);
+
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {
+    socket.emit("stopTyping");
+  }, 1000);
+});
 
 /* =========================
    LOAD ROOMS
@@ -50,16 +55,15 @@ socket.on("roomsList", (rooms) => {
 });
 
 /* =========================
-   JOIN ROOM (UPDATED ONLY THIS)
+   JOIN ROOM
 ========================= */
 function joinRoom(room) {
   tempRoom = room;
-
   document.getElementById("userPopup").style.display = "flex";
 }
 
 /* =========================
-   CONFIRM USER (NEW)
+   CONFIRM USER
 ========================= */
 function confirmUser() {
   const name = document.getElementById("nameInput").value.trim();
@@ -87,7 +91,7 @@ function confirmUser() {
 }
 
 /* =========================
-   ENTER ROOM (NEW)
+   ENTER ROOM
 ========================= */
 function enterRoom() {
   document.getElementById("userPopup").style.display = "none";
@@ -154,8 +158,9 @@ socket.on("message", (data) => {
     addMessage(data.user + ": " + data.text, "other", data.avatar);
   }
 });
+
 /* =========================
-   ADD MESSAGE UI
+   ADD MESSAGE UI (FIXED)
 ========================= */
 function addMessage(msg, type, avatar) {
   const div = document.createElement("div");
@@ -166,27 +171,29 @@ function addMessage(msg, type, avatar) {
       ? `<img src="${avatar}" class="avatar">`
       : `<img src="https://i.imgur.com/6VBx3io.png" class="avatar">`;
 
+  // ✅ ONE message ID (fixed)
+  const messageId = Date.now();
+  div.dataset.id = messageId;
+
   div.innerHTML = `
-  ${type === "other" ? img : ""}
-  <div>
-    <span>${msg}</span>
-    <div class="reactions" id="react-${Date.now()}"></div>
-  </div>
-  ${type === "you" ? img : ""}
-`;
+    ${type === "other" ? img : ""}
+    <div>
+      <span>${msg}</span>
+      <div class="reactions"></div>
+    </div>
+    ${type === "you" ? img : ""}
+  `;
 
-const messageId = Date.now();
-div.dataset.id = messageId;
+  // ✅ ONE click handler (fixed)
+  div.onclick = () => {
+    const emoji = prompt("React 👍 ❤️ 😂 😡");
+    if (!emoji) return;
 
-div.onclick = () => {
-  const emoji = prompt("React with emoji 👍 ❤️ 😂 😡");
-  if (!emoji) return;
-
-  socket.emit("reactMessage", {
-    id: messageId,
-    emoji,
-  });
-};
+    socket.emit("reactMessage", {
+      id: messageId,
+      emoji,
+    });
+  };
 
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
@@ -213,7 +220,7 @@ function filterRooms() {
 }
 
 /* =========================
-   ONLINE USERS UI (NEW - ADD ONLY)
+   ONLINE USERS UI
 ========================= */
 socket.on("onlineUsers", (users) => {
   const box = document.getElementById("onlineUsers");
@@ -233,7 +240,7 @@ socket.on("onlineUsers", (users) => {
       <span>${user}</span>
     `;
 
-   div.onclick = () => openDM(user);
+    div.onclick = () => openDM(user);
 
     box.appendChild(div);
   });
@@ -242,7 +249,6 @@ socket.on("onlineUsers", (users) => {
 /* =========================
    PRIVATE CHAT (DM)
 ========================= */
-
 let currentDMUser = "";
 
 function openDM(user) {
@@ -264,7 +270,7 @@ function sendDM() {
   socket.emit("privateMessage", {
     to: currentDMUser,
     text: msg,
-    from: username
+    from: username,
   });
 
   addDMMessage("You: " + msg);
@@ -277,7 +283,6 @@ function addDMMessage(msg) {
   document.getElementById("dmMessages").appendChild(div);
 }
 
-/* RECEIVE DM */
 socket.on("privateMessage", ({ text, from }) => {
   openDM(from);
   addDMMessage(from + ": " + text);
@@ -301,7 +306,7 @@ socket.on("stopTyping", () => {
 });
 
 /* =========================
-   SHOW REACTIONS
+   SHOW REACTIONS (FIXED - ONLY ONCE)
 ========================= */
 socket.on("messageReaction", ({ id, emoji }) => {
   const msg = document.querySelector(`[data-id='${id}']`);
