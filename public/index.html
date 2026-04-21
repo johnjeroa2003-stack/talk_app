@@ -51,6 +51,31 @@
 
 </div>
 
+<!-- ✅ ADDED ONLY THIS (NO CHANGE ABOVE) -->
+<div id="userPopup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:999;">
+
+  <div style="background:white; padding:20px; border-radius:10px; width:300px; text-align:center;">
+
+    <h3>Enter Details</h3>
+
+    <input id="nameInput" placeholder="Your name" style="width:100%; margin:10px 0; padding:10px;">
+
+    <select id="genderInput" style="width:100%; padding:10px;">
+      <option value="">Select Gender</option>
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+    </select>
+
+    <input type="file" id="avatarInput" style="margin-top:10px;">
+
+    <br><br>
+
+    <button onclick="confirmUser()">Continue</button>
+
+  </div>
+
+</div>
+
 <script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>
 

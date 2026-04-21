@@ -10,6 +10,13 @@ const input = document.getElementById("messageInput");
 let username = "User" + Math.floor(Math.random() * 1000);
 let currentRoom = "";
 
+let tempRoom = "";
+let userProfile = {
+  name: "",
+  gender: "",
+  avatar: "",
+};
+
 /* =========================
    LOAD ROOMS
 ========================= */
@@ -34,20 +41,60 @@ socket.on("roomsList", (rooms) => {
 });
 
 /* =========================
-   JOIN ROOM
+   JOIN ROOM (UPDATED ONLY THIS)
 ========================= */
 function joinRoom(room) {
-  currentRoom = room;
+  tempRoom = room;
+
+  document.getElementById("userPopup").style.display = "flex";
+}
+
+/* =========================
+   CONFIRM USER (NEW)
+========================= */
+function confirmUser() {
+  const name = document.getElementById("nameInput").value.trim();
+  const gender = document.getElementById("genderInput").value;
+  const file = document.getElementById("avatarInput").files[0];
+
+  if (!name || !gender) {
+    alert("Fill all fields");
+    return;
+  }
+
+  userProfile.name = name;
+  userProfile.gender = gender;
+
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      userProfile.avatar = e.target.result;
+      enterRoom();
+    };
+    reader.readAsDataURL(file);
+  } else {
+    enterRoom();
+  }
+}
+
+/* =========================
+   ENTER ROOM (NEW)
+========================= */
+function enterRoom() {
+  document.getElementById("userPopup").style.display = "none";
+
+  username = userProfile.name;
+  currentRoom = tempRoom;
 
   socket.emit("joinRoom", {
-    username,
-    room,
+    username: userProfile.name,
+    room: tempRoom,
   });
 
   document.getElementById("lobby").style.display = "none";
   document.getElementById("chatApp").style.display = "flex";
 
-  document.getElementById("roomName").innerText = room;
+  document.getElementById("roomName").innerText = tempRoom;
 }
 
 /* =========================
