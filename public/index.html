@@ -79,6 +79,21 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>
+<!-- PRIVATE CHAT POPUP -->
+<div id="dmBox" style="display:none; position:fixed; bottom:0; right:10px; width:250px; background:white; border:1px solid #ccc; border-radius:10px; z-index:999;">
 
+  <div style="background:#333; color:white; padding:8px; display:flex; justify-content:space-between;">
+    <span id="dmUser"></span>
+    <button onclick="closeDM()">X</button>
+  </div>
+
+  <div id="dmMessages" style="height:200px; overflow-y:auto; padding:5px;"></div>
+
+  <div style="display:flex;">
+    <input id="dmInput" style="flex:1; padding:5px;">
+    <button onclick="sendDM()">➤</button>
+  </div>
+
+</div>
 </body>
 </html>

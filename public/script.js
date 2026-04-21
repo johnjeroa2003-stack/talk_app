@@ -208,6 +208,52 @@ socket.on("onlineUsers", (users) => {
       <span>${user}</span>
     `;
 
+   div.onclick = () => openDM(user);
+
     box.appendChild(div);
   });
+});
+
+/* =========================
+   PRIVATE CHAT (DM)
+========================= */
+
+let currentDMUser = "";
+
+function openDM(user) {
+  currentDMUser = user;
+  document.getElementById("dmBox").style.display = "block";
+  document.getElementById("dmUser").innerText = user;
+  document.getElementById("dmMessages").innerHTML = "";
+}
+
+function closeDM() {
+  document.getElementById("dmBox").style.display = "none";
+}
+
+function sendDM() {
+  const input = document.getElementById("dmInput");
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  socket.emit("privateMessage", {
+    to: currentDMUser,
+    text: msg,
+    from: username
+  });
+
+  addDMMessage("You: " + msg);
+  input.value = "";
+}
+
+function addDMMessage(msg) {
+  const div = document.createElement("div");
+  div.innerText = msg;
+  document.getElementById("dmMessages").appendChild(div);
+}
+
+/* RECEIVE DM */
+socket.on("privateMessage", ({ text, from }) => {
+  openDM(from);
+  addDMMessage(from + ": " + text);
 });
