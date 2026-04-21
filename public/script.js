@@ -18,7 +18,9 @@ let userProfile = {
   gender: "",
   avatar: "",
 };
+
 let replyingTo = null;
+
 /* =========================
    TYPING SEND
 ========================= */
@@ -144,10 +146,13 @@ function sendMessage() {
     reply: replyingTo,
   });
 
-  replyingTo = null; // reset reply
+  replyingTo = null;
+  document.getElementById("replyBox").style.display = "none";
+
   input.value = "";
 }
 
+/* RECEIVE MESSAGE */
 socket.on("message", (data) => {
   if (data.user === "system") {
     addMessage(data.text, "other", "", null);
@@ -160,8 +165,9 @@ socket.on("message", (data) => {
     addMessage(data.user + ": " + data.text, "other", data.avatar, data.reply);
   }
 });
+
 /* =========================
-   ADD MESSAGE UI (FIXED)
+   ADD MESSAGE UI
 ========================= */
 function addMessage(msg, type, avatar, reply = null) {
   const div = document.createElement("div");
@@ -190,7 +196,7 @@ function addMessage(msg, type, avatar, reply = null) {
     ${type === "you" ? img : ""}
   `;
 
-  // 👉 click = react
+  /* CLICK = REACT */
   div.onclick = () => {
     const emoji = prompt("React 👍 ❤️ 😂 😡");
     if (!emoji) return;
@@ -201,15 +207,26 @@ function addMessage(msg, type, avatar, reply = null) {
     });
   };
 
-  // 👉 RIGHT CLICK / HOLD = reply
+  /* RIGHT CLICK = REPLY */
   div.oncontextmenu = (e) => {
     e.preventDefault();
+
     replyingTo = msg;
-    alert("Replying to: " + msg);
+
+    document.getElementById("replyBox").style.display = "block";
+    document.getElementById("replyText").innerText = msg;
   };
 
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+/* =========================
+   CANCEL REPLY
+========================= */
+function cancelReply() {
+  replyingTo = null;
+  document.getElementById("replyBox").style.display = "none";
 }
 
 /* =========================
@@ -233,7 +250,7 @@ function filterRooms() {
 }
 
 /* =========================
-   ONLINE USERS UI
+   ONLINE USERS
 ========================= */
 socket.on("onlineUsers", (users) => {
   const box = document.getElementById("onlineUsers");
@@ -260,7 +277,7 @@ socket.on("onlineUsers", (users) => {
 });
 
 /* =========================
-   PRIVATE CHAT (DM)
+   PRIVATE CHAT
 ========================= */
 let currentDMUser = "";
 
@@ -302,7 +319,7 @@ socket.on("privateMessage", ({ text, from }) => {
 });
 
 /* =========================
-   SHOW TYPING
+   TYPING UI
 ========================= */
 socket.on("typing", (user) => {
   const box = document.getElementById("typingStatus");
@@ -319,7 +336,7 @@ socket.on("stopTyping", () => {
 });
 
 /* =========================
-   SHOW REACTIONS (FIXED - ONLY ONCE)
+   REACTIONS
 ========================= */
 socket.on("messageReaction", ({ id, emoji }) => {
   const msg = document.querySelector(`[data-id='${id}']`);
