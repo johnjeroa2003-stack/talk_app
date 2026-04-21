@@ -31,14 +31,15 @@ let rooms = {
 };
 
 let usersInRoom = {};
-let userSockets = {};
-let messageStatus = {}; // message tracking
+let userSockets = {}; // for DM
 
 io.on("connection", (socket) => {
+  /* GET ROOMS */
   socket.on("getRooms", () => {
     socket.emit("roomsList", rooms);
   });
 
+  /* CREATE ROOM */
   socket.on("createRoom", ({ room, max }) => {
     if (!rooms[room]) {
       rooms[room] = { users: 0, max: max || 10 };
@@ -46,55 +47,58 @@ io.on("connection", (socket) => {
     }
   });
 
+  /* JOIN ROOM */
   socket.on("joinRoom", ({ username, room }) => {
+    if (!rooms[room]) rooms[room] = { users: 0, max: 10 };
+
+    if (rooms[room].users >= rooms[room].max) {
+      socket.emit("roomFull");
+      return;
+    }
+
     socket.join(room);
     socket.username = username;
     socket.room = room;
 
     userSockets[username] = socket.id;
 
+    rooms[room].users++;
+
     if (!usersInRoom[room]) usersInRoom[room] = [];
     usersInRoom[room].push(username);
 
-    rooms[room].users++;
-
     io.emit("roomsList", rooms);
+
+    socket.emit("joinedRoom", room);
     io.to(room).emit("roomUsers", usersInRoom[room]);
-  });
 
-  /* CHAT WITH STATUS */
-  socket.on("chatMessage", (data) => {
-    const id = Date.now();
-
-    messageStatus[id] = {
-      seenBy: [],
-    };
-
-    io.to(socket.room).emit("message", {
-      id,
-      text: data.text,
-      user: data.user,
-      avatar: data.avatar || "",
+    io.to(room).emit("message", {
+      text: username + " joined",
+      user: "system",
     });
   });
 
-  /* MESSAGE SEEN */
-  socket.on("messageSeen", (id) => {
-    if (messageStatus[id]) {
-      messageStatus[id].seenBy.push(socket.username);
+  /* =========================
+     GROUP CHAT (UPDATED)
+  ========================= */
+  socket.on("chatMessage", (data) => {
+    io.to(socket.room).emit("message", {
+      text: data.text,
+      user: data.user,
+      avatar: data.avatar || "",
+      reply: data.reply || null,
+    });
+  });
 
-      io.to(socket.room).emit("messageStatus", {
-        id,
-        seen: messageStatus[id].seenBy.length,
-      });
+  /* PRIVATE CHAT */
+  socket.on("privateMessage", ({ to, text, from }) => {
+    const target = userSockets[to];
+    if (target) {
+      io.to(target).emit("privateMessage", { text, from });
     }
   });
 
-  /* DELETE MESSAGE */
-  socket.on("deleteMessage", (id) => {
-    io.to(socket.room).emit("deleteMessage", id);
-  });
-
+  /* DISCONNECT */
   socket.on("disconnect", () => {
     if (socket.room && rooms[socket.room]) {
       rooms[socket.room].users--;
