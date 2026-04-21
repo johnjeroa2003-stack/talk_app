@@ -1,4 +1,64 @@
 /* =========================
+   WHATSAPP UI ADD-ON
+========================= */
+
+/* Chat background */
+body {
+  background: #ece5dd;
+}
+
+/* Header upgrade */
+.chat-header {
+  background: #075e54;
+  color: white;
+}
+
+/* Chat scroll area */
+.chat-body {
+  height: calc(100vh - 140px);
+  overflow-y: auto;
+  padding: 10px;
+}
+
+/* Messages */
+.message {
+  display: flex;
+  margin: 6px 0;
+  max-width: 75%;
+}
+
+.message.you {
+  margin-left: auto;
+}
+
+.message div {
+  background: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+/* Your message color */
+.message.you div {
+  background: #dcf8c6;
+}
+
+/* Avatar */
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+/* Input style */
+.chat-input input {
+  border-radius: 20px;
+}
+
+/* Reply box */
+#replyBox {
+  background: #f0f0f0;
+}
+/* =========================
    GLOBAL
 ========================= */
 body {
