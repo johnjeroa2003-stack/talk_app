@@ -39,7 +39,7 @@ body {
 
 /* Your message color */
 .message.you div {
-  background: #dcf8c6;
+  background: #ffffff;
 }
 
 /* Avatar */
@@ -316,4 +316,75 @@ body {
 .reactions {
   font-size: 14px;
   margin-top: 4px;
+}
+
+/* =========================
+   GLASS / BLUR UI UPGRADE
+========================= */
+
+/* Background with soft gradient */
+body {
+  background: linear-gradient(135deg, #e0f7f5, #f5f7fa);
+}
+
+/* Chat container glass effect */
+.chat-app {
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Header glass */
+.chat-header {
+  background: rgba(7, 94, 84, 0.7);
+  backdrop-filter: blur(10px);
+}
+
+/* Chat body */
+.chat-body {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+}
+
+/* Message bubbles glass */
+.message div {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+}
+
+/* Your message bubble */
+.message.you div {
+  background: rgba(220, 248, 198, 0.7);
+}
+
+/* Input bar glass */
+.chat-input {
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+/* Input field */
+.chat-input input {
+  background: rgba(255, 255, 255, 0.6);
+  border: none;
+  outline: none;
+}
+
+/* Online users strip */
+.online-users {
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+/* Reply box glass */
+#replyBox {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+}
+
+/* Typing text softer */
+.typing {
+  opacity: 0.7;
 }
